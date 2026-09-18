@@ -4,6 +4,7 @@ import {
   saveSettings,
   saveLockedSites,
   saveSecurity,
+  migrateStorage,
 } from '../storage/storage.js';
 
 // DOM Elements
@@ -384,22 +385,36 @@ importFileInput.addEventListener('change', async (e) => {
     const text = await file.text();
     const data = JSON.parse(text);
 
-    if (data.settings) {
+    if (!data || typeof data !== 'object') {
+      throw new Error('Backup file must contain a valid JSON object.');
+    }
+
+    let restoredCount = 0;
+    if (Array.isArray(data.lockedSites)) {
+      // Validate and sanitize locked sites
+      const validSites = data.lockedSites.filter((s) => s && typeof (s.domain || s) === 'string');
+      await saveLockedSites(validSites);
+      restoredCount = validSites.length;
+    }
+
+    if (data.settings && typeof data.settings === 'object') {
       await saveSettings(data.settings);
     }
-    if (Array.isArray(data.lockedSites)) {
-      await saveLockedSites(data.lockedSites);
-    }
+
+    // Run idempotent migration to ensure schema v2 compliance
+    await migrateStorage();
 
     await chrome.runtime.sendMessage({
       type: MESSAGE_TYPES.UPDATE_SETTINGS,
       settings: data.settings || {},
     });
 
-    showToast('Configuration restored!');
-    setTimeout(() => window.location.reload(), 600);
+    showToast(`Restored ${restoredCount} locked website${restoredCount === 1 ? '' : 's'} and settings!`);
+    setTimeout(() => window.location.reload(), 750);
   } catch (err) {
-    alert('Invalid backup file. Could not parse JSON.');
+    alert(`Invalid backup file: ${err.message || 'Could not parse JSON'}`);
+  } finally {
+    importFileInput.value = '';
   }
 });
 

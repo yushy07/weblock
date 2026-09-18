@@ -304,6 +304,23 @@ body {
     0 8px 24px rgba(139, 92, 246, 0.15);
 }
 
+.input-wrapper.shake {
+  animation: lockShake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+  border-color: var(--danger) !important;
+  box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.25) !important;
+}
+
+.modal-dialog.shake {
+  animation: lockShake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes lockShake {
+  10%, 90% { transform: translate3d(-3px, 0, 0); }
+  20%, 80% { transform: translate3d(5px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+  40%, 60% { transform: translate3d(6px, 0, 0); }
+}
+
 .input-icon {
   display: flex;
   align-items: center;

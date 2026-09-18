@@ -209,6 +209,24 @@ function renderDashboard() {
   renderSitesList(list);
 }
 
+function escapeHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function closeAllDropdowns() {
+  if (activeDropdown) {
+    activeDropdown.style.display = 'none';
+    activeDropdown = null;
+  }
+  document.querySelectorAll('.action-menu-dropdown').forEach((d) => {
+    d.style.display = 'none';
+  });
+}
+
 // Render Sites Table / List
 function renderSitesList(sites) {
   closeAllDropdowns();
@@ -217,15 +235,23 @@ function renderSitesList(sites) {
     sitesList.innerHTML = `
       <div class="empty-sites-state">
         <div class="empty-icon">${getIcon('globe', 26)}</div>
-        <div class="empty-title">${searchQuery ? 'No matching websites' : 'No websites protected yet'}</div>
-        <div class="empty-desc">${searchQuery ? 'Try clearing your search query' : 'Add websites to keep tabs focused and distraction-free.'}</div>
-        ${!searchQuery ? '<button class="btn btn-primary btn-sm glow-btn" id="emptyAddBtn">+ Add Website</button>' : ''}
+        <div class="empty-title">${searchQuery ? `No websites matching "${escapeHtml(searchQuery)}"` : 'No websites protected yet'}</div>
+        <div class="empty-desc">${searchQuery ? 'Check your spelling or clear the search filter to see all sites.' : 'Add websites to keep tabs focused and distraction-free.'}</div>
+        ${!searchQuery ? '<button class="btn btn-primary btn-sm glow-btn" id="emptyAddBtn">+ Add Website</button>' : '<button class="btn btn-secondary btn-sm" id="emptyClearSearchBtn">Clear Search</button>'}
       </div>
     `;
 
     const emptyAddBtn = document.getElementById('emptyAddBtn');
     if (emptyAddBtn) {
       emptyAddBtn.addEventListener('click', openAddModal);
+    }
+    const emptyClearSearchBtn = document.getElementById('emptyClearSearchBtn');
+    if (emptyClearSearchBtn) {
+      emptyClearSearchBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        searchQuery = '';
+        renderDashboard();
+      });
     }
     return;
   }
@@ -1083,8 +1109,30 @@ dashSiteResetForm.addEventListener('submit', async (e) => {
   }
 });
 
+// Close dropdown menus when clicking outside
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.menu-wrap')) {
+    closeAllDropdowns();
+  }
+});
+
+// Escape key dismisses menus and open modals
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closeAllDropdowns();
+    if (addSiteModal && addSiteModal.style.display !== 'none') {
+      closeAddModal();
+    } else if (sitePasswordModal && sitePasswordModal.style.display !== 'none') {
+      closeSitePasswordModal();
+    } else if (dashSiteResetModal && dashSiteResetModal.style.display !== 'none') {
+      closeDashSiteResetModal();
+    }
+  }
+});
+
 // Init
 initIcons();
 renderPresets();
 loadDashboardState();
+
 

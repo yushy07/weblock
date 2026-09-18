@@ -117,6 +117,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               }))
             : [];
 
+          const rateState = await getRateLimitState();
+          const now = Date.now();
+          const isRateLimited = !!(rateState.lockedUntil && now < rateState.lockedUntil);
+          const cooldownSeconds = isRateLimited
+            ? Math.ceil((rateState.lockedUntil - now) / 1000)
+            : 0;
+
           sendResponse({
             success: true,
             settings,
@@ -125,6 +132,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             hasRecovery,
             recoveryQuestions: sanitizedQuestions,
             isIncognitoAllowed: incognitoAllowed,
+            rateLimited: isRateLimited,
+            cooldownSeconds,
           });
           break;
         }

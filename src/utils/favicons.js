@@ -7,6 +7,8 @@
  * 4. Deterministic SVG fallback icon based on domain hash
  */
 
+import { localGet, localSet, STORAGE_KEYS } from '../storage/storage.js';
+
 const PALETTE = [
   '#8B5CF6', // Purple
   '#6366F1', // Indigo
@@ -144,9 +146,21 @@ export function testImageUrl(url, timeoutMs = 1500) {
   });
 }
 
+export async function cacheFavicon(domain, iconUrl) {
+  if (!domain || !iconUrl || iconUrl.startsWith('chrome://')) return;
+  const cleanDomain = domain.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0].toLowerCase();
+  try {
+    const cacheData = await localGet(STORAGE_KEYS.FAVICON_CACHE);
+    const cache = cacheData[STORAGE_KEYS.FAVICON_CACHE] || {};
+    cache[cleanDomain] = iconUrl;
+    await localSet({ [STORAGE_KEYS.FAVICON_CACHE]: cache });
+  } catch (e) {}
+}
+
 /**
  * Resolves the best available favicon for a domain.
  * Non-blocking, always resolves with either a verified icon URL or a generated fallback SVG.
+ * Checks: 1. Existing icon, 2. Persistent storage cache, 3. Open tabs, 4. High-res resolver
  *
  * @param {string} domain
  * @param {string} [existingIcon]
@@ -167,10 +181,25 @@ export async function resolveFavicon(domain, existingIcon = null) {
     };
   }
 
-  // 1. Check open tabs
+  const cleanDomain = domain.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0].toLowerCase();
+
+  // 1. Check local persistent storage cache
   try {
-    const tabFavicon = await getFaviconFromOpenTabs(domain);
+    const cacheData = await localGet(STORAGE_KEYS.FAVICON_CACHE);
+    const cache = cacheData[STORAGE_KEYS.FAVICON_CACHE] || {};
+    if (cache[cleanDomain]) {
+      return {
+        faviconUrl: cache[cleanDomain],
+        faviconSource: 'local-cache',
+      };
+    }
+  } catch (e) {}
+
+  // 2. Check open tabs
+  try {
+    const tabFavicon = await getFaviconFromOpenTabs(cleanDomain);
     if (tabFavicon) {
+      await cacheFavicon(cleanDomain, tabFavicon);
       return {
         faviconUrl: tabFavicon,
         faviconSource: 'chrome-tab',
@@ -178,8 +207,7 @@ export async function resolveFavicon(domain, existingIcon = null) {
     }
   } catch (e) {}
 
-  // 2. Default to primary high-res resolver (Google S2 with 128px size)
-  const cleanDomain = domain.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
+  // 3. Default to primary high-res resolver (Google S2 with 128px size)
   const primaryUrl = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(cleanDomain)}&sz=128`;
 
   return {

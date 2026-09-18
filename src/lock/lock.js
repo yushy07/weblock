@@ -5,15 +5,41 @@ import { generateFallbackIcon } from '../utils/favicons.js';
 const params = new URLSearchParams(window.location.search);
 const rawSiteParam = params.get('site');
 const domain = (rawSiteParam ? rawSiteParam.trim() : 'protected website').replace(/^www\./, '').toLowerCase();
-let targetUrl = params.get('target');
 
-// Fallback if targetUrl is missing or internal
-if (!targetUrl || targetUrl.startsWith('chrome-extension://')) {
-  targetUrl = `https://${domain}`;
+/**
+ * Open Redirect Defense:
+ * Validates that targetUrl uses http: or https: and matches the expected domain (or subdomains).
+ * If invalid or external, safely falls back to the clean domain URL.
+ */
+function sanitizeTargetUrl(rawUrl, expectedDomain) {
+  if (!rawUrl || typeof rawUrl !== 'string') {
+    return `https://${expectedDomain}`;
+  }
+
+  try {
+    const parsed = new URL(rawUrl);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return `https://${expectedDomain}`;
+    }
+
+    const hostname = parsed.hostname.replace(/^www\./, '').toLowerCase();
+    const cleanExpected = expectedDomain.replace(/^www\./, '').toLowerCase();
+
+    if (hostname === cleanExpected || hostname.endsWith(`.${cleanExpected}`)) {
+      return parsed.toString();
+    }
+  } catch (e) {
+    // Malformed URL
+  }
+
+  return `https://${expectedDomain}`;
 }
+
+const targetUrl = sanitizeTargetUrl(params.get('target'), domain);
 
 // Elements
 const lockCard = document.getElementById('lockCard');
+const inputWrapper = document.getElementById('inputWrapper');
 const siteAvatar = document.getElementById('siteAvatar');
 const siteFavicon = document.getElementById('siteFavicon');
 const siteInitial = document.getElementById('siteInitial');
@@ -264,6 +290,29 @@ function showFallbackAvatar(fallbackDataUrl) {
   };
 }
 
+function triggerErrorShake(element) {
+  const target = element || inputWrapper;
+  if (!target) return;
+  target.classList.remove('shake');
+  void target.offsetWidth; // Trigger reflow
+  target.classList.add('shake');
+  setTimeout(() => {
+    target.classList.remove('shake');
+  }, 450);
+}
+
+// Proactive rate-limit lockout check on initial load
+async function checkActiveCooldown() {
+  try {
+    const res = await chrome.runtime.sendMessage({ type: MESSAGE_TYPES.GET_STATE });
+    if (res && res.rateLimited && res.cooldownSeconds > 0) {
+      startCooldownTimer(res.cooldownSeconds);
+    }
+  } catch (err) {
+    console.warn('[WebLock] Could not check active cooldown:', err);
+  }
+}
+
 // Handle unlock form submission
 lockForm.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -283,6 +332,7 @@ lockForm.addEventListener('submit', async (e) => {
 
     if (!verifyRes || !verifyRes.valid) {
       setSubmitting(false);
+      triggerErrorShake(inputWrapper);
 
       if (verifyRes?.rateLimited) {
         startCooldownTimer(verifyRes.cooldownSeconds || 15);
@@ -300,6 +350,9 @@ lockForm.addEventListener('submit', async (e) => {
     btnLockIcon.innerHTML = getIcon('check', 18);
     btnLockIcon.style.display = 'inline-flex';
     buttonText.textContent = 'Access Granted!';
+
+    // In-memory credential scrubbing
+    passwordInput.value = '';
 
     if (!currentTabId) {
       await resolveCurrentTabId();
@@ -436,6 +489,7 @@ recoveryForm.addEventListener('submit', async (e) => {
   } else {
     recoveryError.textContent = res?.error || 'Incorrect answer. Try another recovery question.';
     recoveryError.style.display = 'block';
+    triggerErrorShake(recoveryModal.querySelector('.modal-dialog'));
   }
 });
 
@@ -471,11 +525,13 @@ siteResetForm.addEventListener('submit', async (e) => {
     if (newSitePw.length < 4) {
       siteResetError.textContent = 'New password must be at least 4 characters.';
       siteResetError.style.display = 'block';
+      triggerErrorShake(siteResetModal.querySelector('.modal-dialog'));
       return;
     }
     if (newSitePw !== confirmPw) {
       siteResetError.textContent = 'Passwords do not match.';
       siteResetError.style.display = 'block';
+      triggerErrorShake(siteResetModal.querySelector('.modal-dialog'));
       return;
     }
   }
@@ -500,11 +556,35 @@ siteResetForm.addEventListener('submit', async (e) => {
   } else {
     siteResetError.textContent = res?.error || 'Authentication failed.';
     siteResetError.style.display = 'block';
+    triggerErrorShake(siteResetModal.querySelector('.modal-dialog'));
+  }
+});
+
+// Keyboard accessibility: Escape to dismiss modals
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const isRecoveryOpen = recoveryModal && recoveryModal.style.display !== 'none';
+    const isSiteResetOpen = siteResetModal && siteResetModal.style.display !== 'none';
+    if (isRecoveryOpen || isSiteResetOpen) {
+      closeModals();
+      passwordInput.focus();
+    }
+  }
+});
+
+// Window focus: Ensure passwordInput receives focus when user activates tab
+window.addEventListener('focus', () => {
+  const isModalOpen =
+    (recoveryModal && recoveryModal.style.display !== 'none') ||
+    (siteResetModal && siteResetModal.style.display !== 'none');
+  if (!isModalOpen) {
+    passwordInput.focus();
   }
 });
 
 // Initialize
 initVisuals();
+checkActiveCooldown();
 resolveCurrentTabId();
 loadSiteDetails();
 
