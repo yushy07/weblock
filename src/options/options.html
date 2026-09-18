@@ -125,6 +125,41 @@
           </div>
         </div>
 
+        <!-- Random Challenge Overview Card -->
+        <div class="settings-card">
+          <div class="card-specular"></div>
+          <div class="card-header">
+            <div class="header-icon" id="randomChallengeHeaderIcon"></div>
+            <div>
+              <h2 class="card-title">Random Challenge Overview</h2>
+              <p class="card-desc">Occasional unpredictable authentication prompt</p>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="site-pass-overview-grid">
+              <div class="site-pass-stat-card">
+                <span class="site-pass-stat-icon">🎲</span>
+                <div class="site-pass-stat-info">
+                  <span class="site-pass-stat-count" id="randomChallengeCountText">0</span>
+                  <span class="site-pass-stat-label">Random Challenge Sites</span>
+                  <span class="site-pass-stat-sub">Protected with occasional prompts</span>
+                </div>
+              </div>
+              <div class="site-pass-stat-card">
+                <span class="site-pass-stat-icon">⏱️</span>
+                <div class="site-pass-stat-info">
+                  <span class="site-pass-stat-count" style="font-size: 16px; margin-top: 4px;">4 to 7 Days</span>
+                  <span class="site-pass-stat-label">Default Frequency</span>
+                  <span class="site-pass-stat-sub">Weekly (hard 4-day cooldown)</span>
+                </div>
+              </div>
+            </div>
+            <p class="site-pass-note" title="Random Challenge prompts at unpredictable intervals with a mandatory 4-day cooldown between prompts. Chrome alarms ensure redirect rules are active before you navigate.">
+              ℹ️ <strong>How it works:</strong> After you authenticate, WebLock guarantees at least 4 full days of undisturbed access before scheduling the next random challenge within your chosen window (Weekly, 2 Weeks, or Monthly).
+            </p>
+          </div>
+        </div>
+
         <!-- Protection & Lifetime -->
         <div class="settings-card">
           <div class="card-specular"></div>

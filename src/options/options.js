@@ -32,9 +32,11 @@ const manageRecoveryBtn = document.getElementById('manageRecoveryBtn');
 const manageRecoveryIcon = document.getElementById('manageRecoveryIcon');
 const manageRecoveryBtnText = document.getElementById('manageRecoveryBtnText');
 
-// Password Modes Stats
+// Password & Protection Modes Stats
 const universalCountText = document.getElementById('universalCountText');
 const separateCountText = document.getElementById('separateCountText');
+const randomChallengeCountText = document.getElementById('randomChallengeCountText');
+const randomChallengeHeaderIcon = document.getElementById('randomChallengeHeaderIcon');
 
 // Recovery Modal
 const recoveryModal = document.getElementById('recoveryModal');
@@ -89,6 +91,7 @@ function initIcons() {
   securityHeaderIcon.innerHTML = getIcon('key', 18);
   recoveryHeaderIcon.innerHTML = getIcon('helpCircle', 18);
   sitePassHeaderIcon.innerHTML = getIcon('shieldCheck', 18);
+  if (randomChallengeHeaderIcon) randomChallengeHeaderIcon.innerHTML = getIcon('shieldCheck', 18);
   protectionHeaderIcon.innerHTML = getIcon('shieldCheck', 18);
   sessionHeaderIcon.innerHTML = getIcon('refresh', 18);
   dataHeaderIcon.innerHTML = getIcon('settings', 18);
@@ -145,6 +148,10 @@ async function loadSettings() {
       const universalCount = sites.length - separateCount;
       universalCountText.textContent = universalCount;
       separateCountText.textContent = separateCount;
+
+      // Random challenge stats
+      const randomCount = sites.filter((s) => s.protectionMode === 'random').length;
+      if (randomChallengeCountText) randomChallengeCountText.textContent = randomCount;
     }
   } catch (err) {
     console.error('[WebLock Settings] Failed to load settings:', err);

@@ -127,6 +127,8 @@ describe('Storage Migration Engine', () => {
     expect(sites[0].domain).toBe('news.ycombinator.com');
     expect(sites[0].name).toBe('Hacker News');
     expect(sites[0].passwordMode).toBe(PASSWORD_MODES.UNIVERSAL);
+    expect(sites[0].protectionMode).toBe('every-tab');
+    expect(sites[0].randomChallenge).toBeNull();
     expect(sites[0].security).toBeNull();
     expect(sites[0].faviconUrl).toBeNull();
 

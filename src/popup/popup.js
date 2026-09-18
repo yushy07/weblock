@@ -118,8 +118,9 @@ function renderState() {
       activeTabModePill.style.display = 'inline-flex';
 
       const isSeparate = matchedSite.passwordMode === 'separate';
+      const isRandom = matchedSite.protectionMode === 'random';
       activeTabModePill.className = `tab-mode-pill ${isSeparate ? 'mode-separate' : 'mode-universal'}`;
-      activeTabModePill.innerHTML = isSeparate ? '🔑 Separate password' : '🔐 WebLock password';
+      activeTabModePill.innerHTML = `${isSeparate ? '🔑 Separate' : '🔐 WebLock'} • ${isRandom ? '🎲 Random' : '🔁 Every Tab'}`;
     } else {
       quickLockBtn.style.display = 'inline-flex';
       alreadyProtectedPill.style.display = 'none';
@@ -166,6 +167,15 @@ function renderState() {
       wrap.appendChild(img);
       wrap.appendChild(domainSpan);
       wrap.appendChild(modeTag);
+
+      // Protection tag (Random)
+      if (site.protectionMode === 'random') {
+        const protTag = document.createElement('span');
+        protTag.className = 'mini-mode-tag';
+        protTag.textContent = '🎲';
+        protTag.title = 'Random challenge mode';
+        wrap.appendChild(protTag);
+      }
 
       // Mini switch
       const label = document.createElement('label');

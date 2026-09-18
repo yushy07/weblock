@@ -115,6 +115,10 @@ const siteCardNewPwGroup = document.getElementById('siteCardNewPwGroup');
 const siteCardNewPw = document.getElementById('siteCardNewPw');
 const siteCardConfirmPw = document.getElementById('siteCardConfirmPw');
 const sitePasswordError = document.getElementById('sitePasswordError');
+const siteCardProtectionModeRadios = document.getElementsByName('siteCardProtectionMode');
+const siteCardFrequencyGroup = document.getElementById('siteCardFrequencyGroup');
+const siteCardFrequencyRadios = document.getElementsByName('siteCardFrequency');
+const siteCardFrequencyNotice = document.getElementById('siteCardFrequencyNotice');
 
 // Site Reset Modal
 const dashSiteResetModal = document.getElementById('dashSiteResetModal');
@@ -335,6 +339,14 @@ function renderSitesList(sites) {
     modeBadge.textContent = isSeparate ? '🔑 Separate password' : '🔐 WebLock password';
     domainLine.appendChild(modeBadge);
 
+    // Protection Mode Tag
+    const isRandom = site.protectionMode === PROTECTION_MODES.RANDOM;
+    const protectionBadge = document.createElement('span');
+    protectionBadge.className = `site-protection-badge ${isRandom ? 'random' : 'every-tab'}`;
+    const intervalLabel = formatIntervalLabel(site.randomChallenge?.interval || CHALLENGE_INTERVALS.WEEKLY);
+    protectionBadge.textContent = isRandom ? `🎲 Random (${intervalLabel})` : '🔁 Every new tab';
+    domainLine.appendChild(protectionBadge);
+
     const dateLine = document.createElement('div');
     dateLine.className = 'site-date';
     dateLine.textContent = site.createdAt
@@ -387,11 +399,11 @@ function renderSitesList(sites) {
     dropdown.className = 'action-menu-dropdown';
     dropdown.style.display = 'none';
 
-    // 1. Change password / Switch mode
+    // 1. Edit protection / Change password
     const changePwBtn = document.createElement('button');
     changePwBtn.type = 'button';
     changePwBtn.className = 'menu-item';
-    changePwBtn.innerHTML = `${getIcon('key', 14)} <span>${isSeparate ? 'Change password' : 'Set separate password'}</span>`;
+    changePwBtn.innerHTML = `${getIcon('shield', 14)} <span>Edit protection</span>`;
     changePwBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       openSitePasswordModal(site);
@@ -626,6 +638,15 @@ function openAddModal() {
   addSitePassword.value = '';
   addSiteConfirmPassword.value = '';
 
+  // Reset protection mode radios to every-tab
+  for (const r of addSiteProtectionModeRadios) {
+    r.checked = r.value === 'every-tab';
+  }
+  for (const r of addSiteFrequencyRadios) {
+    r.checked = r.value === '7d';
+  }
+  addSiteFrequencyGroup.style.display = 'none';
+
   siteUrlInput.focus();
 }
 
@@ -640,6 +661,17 @@ for (const r of addSitePasswordModeRadios) {
       addSiteSeparatePasswordFields.style.display = 'block';
     } else if (r.checked) {
       addSiteSeparatePasswordFields.style.display = 'none';
+    }
+  });
+}
+
+// Protection mode radio listeners in Add Modal
+for (const r of addSiteProtectionModeRadios) {
+  r.addEventListener('change', () => {
+    if (r.value === 'random' && r.checked) {
+      addSiteFrequencyGroup.style.display = 'block';
+    } else if (r.checked) {
+      addSiteFrequencyGroup.style.display = 'none';
     }
   });
 }
@@ -762,6 +794,20 @@ addSiteForm.addEventListener('submit', async (e) => {
     }
   }
 
+  let protectionMode = PROTECTION_MODES.EVERY_TAB;
+  for (const r of addSiteProtectionModeRadios) {
+    if (r.checked && r.value === 'random') {
+      protectionMode = PROTECTION_MODES.RANDOM;
+    }
+  }
+
+  let challengeInterval = CHALLENGE_INTERVALS.WEEKLY;
+  for (const r of addSiteFrequencyRadios) {
+    if (r.checked) {
+      challengeInterval = r.value;
+    }
+  }
+
   let sitePassword = null;
   if (mode === PASSWORD_MODES.SEPARATE) {
     sitePassword = addSitePassword.value;
@@ -785,6 +831,8 @@ addSiteForm.addEventListener('submit', async (e) => {
     input: val,
     includeSubdomains,
     passwordMode: mode,
+    protectionMode,
+    challengeInterval,
     sitePassword,
   });
 
@@ -951,7 +999,7 @@ finishOnboardingBtn.addEventListener('click', async () => {
   await loadDashboardState();
 });
 
-// Site Password Settings Modal Handlers
+// Site Password & Protection Settings Modal Handlers
 function openSitePasswordModal(site) {
   selectedSiteForModal = site;
   closeAllDropdowns();
@@ -968,6 +1016,23 @@ function openSitePasswordModal(site) {
   }
 
   siteCardNewPwGroup.style.display = isSeparate ? 'block' : 'none';
+
+  // Populate Protection Mode
+  const isRandom = site.protectionMode === PROTECTION_MODES.RANDOM;
+  for (const r of siteCardProtectionModeRadios) {
+    r.checked = isRandom ? r.value === 'random' : r.value === 'every-tab';
+  }
+
+  // Populate Frequency Radios
+  const currentInterval = site.randomChallenge?.interval || CHALLENGE_INTERVALS.WEEKLY;
+  for (const r of siteCardFrequencyRadios) {
+    r.checked = r.value === currentInterval;
+  }
+  selectedSiteForModal._originalInterval = currentInterval;
+
+  siteCardFrequencyGroup.style.display = isRandom ? 'block' : 'none';
+  siteCardFrequencyNotice.style.display = 'none';
+
   sitePasswordModal.style.display = 'flex';
 }
 
@@ -989,40 +1054,80 @@ for (const r of siteCardPasswordModeRadios) {
   });
 }
 
+for (const r of siteCardProtectionModeRadios) {
+  r.addEventListener('change', () => {
+    if (r.value === 'random' && r.checked) {
+      siteCardFrequencyGroup.style.display = 'block';
+    } else if (r.checked) {
+      siteCardFrequencyGroup.style.display = 'none';
+    }
+  });
+}
+
+for (const r of siteCardFrequencyRadios) {
+  r.addEventListener('change', () => {
+    if (selectedSiteForModal && selectedSiteForModal.protectionMode === PROTECTION_MODES.RANDOM) {
+      if (r.checked && r.value !== selectedSiteForModal._originalInterval) {
+        siteCardFrequencyNotice.style.display = 'flex';
+      } else {
+        siteCardFrequencyNotice.style.display = 'none';
+      }
+    }
+  });
+}
+
 sitePasswordForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   if (!selectedSiteForModal) return;
   sitePasswordError.style.display = 'none';
 
-  let targetMode = PASSWORD_MODES.UNIVERSAL;
+  let targetPasswordMode = PASSWORD_MODES.UNIVERSAL;
   for (const r of siteCardPasswordModeRadios) {
     if (r.checked && r.value === 'separate') {
-      targetMode = PASSWORD_MODES.SEPARATE;
+      targetPasswordMode = PASSWORD_MODES.SEPARATE;
+    }
+  }
+
+  let targetProtectionMode = PROTECTION_MODES.EVERY_TAB;
+  for (const r of siteCardProtectionModeRadios) {
+    if (r.checked && r.value === 'random') {
+      targetProtectionMode = PROTECTION_MODES.RANDOM;
+    }
+  }
+
+  let targetFrequency = CHALLENGE_INTERVALS.WEEKLY;
+  for (const r of siteCardFrequencyRadios) {
+    if (r.checked) {
+      targetFrequency = r.value;
     }
   }
 
   const currentAuth = siteCardCurrentAuth.value;
   let newPw = null;
 
-  if (targetMode === PASSWORD_MODES.SEPARATE) {
+  if (targetPasswordMode === PASSWORD_MODES.SEPARATE) {
     newPw = siteCardNewPw.value;
     const confirmPw = siteCardConfirmPw.value;
-    if (newPw.length < 4) {
-      sitePasswordError.textContent = 'Separate password must be at least 4 characters.';
-      sitePasswordError.style.display = 'block';
-      return;
-    }
-    if (newPw !== confirmPw) {
-      sitePasswordError.textContent = 'Passwords do not match.';
-      sitePasswordError.style.display = 'block';
-      return;
+    if (selectedSiteForModal.passwordMode !== PASSWORD_MODES.SEPARATE || newPw) {
+      if (!newPw || newPw.length < 4) {
+        sitePasswordError.textContent = 'Separate password must be at least 4 characters.';
+        sitePasswordError.style.display = 'block';
+        return;
+      }
+      if (newPw !== confirmPw) {
+        sitePasswordError.textContent = 'Passwords do not match.';
+        sitePasswordError.style.display = 'block';
+        return;
+      }
     }
   }
 
   const res = await chrome.runtime.sendMessage({
-    type: MESSAGE_TYPES.SET_SITE_PASSWORD_MODE,
+    type: MESSAGE_TYPES.UPDATE_SITE_PROTECTION,
     siteId: selectedSiteForModal.id,
-    passwordMode: targetMode,
+    passwordMode: targetPasswordMode,
+    protectionMode: targetProtectionMode,
+    challengeInterval: targetFrequency,
     sitePassword: newPw,
     currentAuthPassword: currentAuth,
   });
@@ -1032,7 +1137,7 @@ sitePasswordForm.addEventListener('submit', async (e) => {
     showToast(`Updated protection for ${selectedSiteForModal.domain}`);
     await loadDashboardState();
   } else {
-    sitePasswordError.textContent = res?.error || 'Failed to update site password mode.';
+    sitePasswordError.textContent = res?.error || 'Failed to update site protection.';
     sitePasswordError.style.display = 'block';
   }
 });
