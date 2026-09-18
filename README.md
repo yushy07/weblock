@@ -6,7 +6,7 @@
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Manifest V3](https://img.shields.io/badge/Manifest-V3-success.svg)](manifest.json)
-[![Tests Passing](https://img.shields.io/badge/Vitest-26%2F26%20Passed-brightgreen.svg)](tests/)
+[![Tests Passing](https://img.shields.io/badge/Vitest-30%2F30%20Passed-brightgreen.svg)](tests/)
 [![Security: Local-First](https://img.shields.io/badge/Security-100%25%20Local--First-8B5CF6.svg)](#-privacy--local-first-architecture)
 [![Chrome](https://img.shields.io/badge/Chrome-Extension-informational.svg)](#-quick-start--installation)
 
@@ -46,15 +46,23 @@ Never lose access to your locked websites:
 - Opening the same domain in another tab or window immediately triggers the lock screen again.
 - Closing the tab automatically revokes the session rule via `chrome.tabs.onRemoved`.
 
-### 🌐 Smart Dynamic Favicons & Deterministic Fallbacks
+### 🛡️ Open Redirect Defense & Input Sanitization
+- Redirect parameters on the lock screen are strictly verified via URL host parsing to ensure the destination scheme is `http:` or `https:` and strictly matches the locked target domain (or its subdomains). Foreign redirects and script injection attempts are safely discarded.
+
+### ⏱️ Persistent Rate Limiting & Cooldown Protection
+- Failed password attempts trigger progressive lockouts up to 60 seconds. Cooldown state is computed synchronously by the background service worker so refreshing the tab cannot bypass active rate limits.
+
+### 🌐 Smart Dynamic Favicons & Local 0ms Caching
 - Resolves website favicons dynamically using non-blocking multi-source resolution (cache, open tabs, Google S2, DuckDuckGo, direct origin).
+- Verified icon URLs are cached in `chrome.storage.local`, ensuring 0ms instant offline rendering without redundant external network requests.
 - Offline or unresolvable icons automatically generate a crisp, deterministic SVG monogram badge styled with a unique color derived from the domain name.
 
-### 👁️ "Reveal Mode Only" Privacy
+### 👁️ "Reveal Mode Only" Privacy & In-Memory Scrubbing
 - WebLock **never displays or stores plaintext password values**.
 - The Dashboard, Popup, and Lock Screen show visual **password mode badges only**:
   - `🔐 WebLock password` (*Same password used for other protected sites*)
   - `🔑 Separate password` (*Only this website uses this password*)
+- Password field inputs are scrubbed from memory immediately upon successful tab unlock.
 - Forgotten site-specific passwords can be safely reset on the lock screen or dashboard through master password authorization.
 
 ### 🕶️ Incognito Mode Protection
@@ -102,23 +110,24 @@ On first install, the **WebLock Dashboard** opens automatically:
 
 ## 🧪 Automated Testing
 
-WebLock includes a Vitest test suite covering crypto, domain normalization, recovery mechanics, password modes, and storage migrations:
+WebLock includes a Vitest test suite covering crypto, domain normalization, recovery mechanics, password modes, storage migrations, security hardening, and favicon caching:
 
 ```bash
 npm test
 ```
 
 ```text
+ ✓ tests/domains.test.js (9 tests)
+ ✓ tests/security-hardening.test.js (4 tests)
  ✓ tests/favicons.test.js (3 tests)
  ✓ tests/crypto.test.js (4 tests)
- ✓ tests/recovery.test.js (4 tests)
- ✓ tests/password-modes.test.js (3 tests)
- ✓ tests/domains.test.js (9 tests)
  ✓ tests/migration.test.js (3 tests)
+ ✓ tests/password-modes.test.js (3 tests)
+ ✓ tests/recovery.test.js (4 tests)
 
- Test Files  6 passed (6)
-      Tests  26 passed (26)
-   Duration  993ms
+ Test Files  7 passed (7)
+      Tests  30 passed (30)
+   Duration  1.04s
 ```
 
 ---
@@ -130,6 +139,8 @@ weblock/
 ├── assets/
 │   ├── banner.png             # GitHub repository banner
 │   └── logo.png               # WebLock cyber shield app logo
+├── archive/
+│   └── legacy-prototype/      # Archived proof-of-concept prototype
 ├── manifest.json              # Chrome Manifest V3 declaration
 ├── package.json               # Scripts, vitest dependency, metadata
 ├── LICENSE                    # Apache License 2.0
@@ -149,7 +160,7 @@ weblock/
 │   │   └── dashboard.js       # Site management, search, presets & mode switching
 │   ├── lock/
 │   │   ├── lock.html          # Lock screen UI with subtle recovery flow
-│   │   ├── lock.css           # Specular dark glass styling
+│   │   ├── lock.css           # Specular dark glass styling & error shake animations
 │   │   └── lock.js            # Authentication, rate limit cooldowns & recovery
 │   ├── options/
 │   │   ├── options.html       # Extension options & recovery question manager
@@ -166,15 +177,16 @@ weblock/
 │   └── utils/
 │       ├── constants.js       # Message types, password modes & question bank
 │       ├── domains.js         # Domain normalization & DNR regex pattern generator
-│       ├── favicons.js        # Dynamic favicon resolver & SVG monogram generator
+│       ├── favicons.js        # Dynamic favicon resolver & persistent local cache
 │       └── icons.js           # Inlined SVG icon library
 └── tests/
-    ├── crypto.test.js         # PBKDF2 hashing & constant-time compare tests
-    ├── domains.test.js        # Domain normalization & DNR rule tests
-    ├── favicons.test.js       # Favicon resolver & fallback SVG tests
-    ├── migration.test.js      # Idempotent storage migration tests
-    ├── password-modes.test.js # Universal vs. separate password tests
-    └── recovery.test.js       # 1-of-3 recovery & answer normalization tests
+    ├── crypto.test.js             # PBKDF2 hashing & constant-time compare tests
+    ├── domains.test.js            # Domain normalization & DNR rule tests
+    ├── favicons.test.js           # Favicon candidate URLs & fallback SVG tests
+    ├── migration.test.js          # Idempotent storage migration tests
+    ├── password-modes.test.js     # Universal vs. separate password tests
+    ├── recovery.test.js           # 1-of-3 recovery & answer normalization tests
+    └── security-hardening.test.js # Open redirect defense & favicon cache tests
 ```
 
 ---
