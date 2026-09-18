@@ -240,6 +240,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               name: site.name,
               enabled: site.enabled,
               passwordMode: site.passwordMode || PASSWORD_MODES.UNIVERSAL,
+              protectionMode: site.protectionMode || PROTECTION_MODES.EVERY_TAB,
+              challengeInterval: site.randomChallenge?.interval || null,
+              challengeActive: !!site.randomChallenge?.challengeActive,
               hasCustomPassword: !!(site.security && site.security.hash),
               faviconUrl: site.faviconUrl,
               faviconData: site.faviconData,
@@ -622,13 +625,32 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             return;
           }
 
+          const site = await getSiteByDomain(domain);
+          if (site && site.protectionMode === PROTECTION_MODES.RANDOM) {
+            // Successful authentication of random challenge:
+            // 1. Reset challenge: challengeActive = false, lastAuthenticatedAt = now, new nextChallengeAt (>= lastAuthenticatedAt + 4 days)
+            const updatedSite = resetChallenge(site, Date.now());
+            await updateSite(updatedSite.id, { randomChallenge: updatedSite.randomChallenge });
+            // 2. Schedule next alarm
+            await scheduleChallengeAlarm(updatedSite);
+            // 3. Remove DNR redirect rule
+            await syncDynamicRules();
+          }
+
           const result = await addSessionAllowRule(tabId, domain);
           sendResponse(result);
           break;
         }
 
         case MESSAGE_TYPES.ADD_SITE: {
-          const { input, includeSubdomains, passwordMode, sitePassword } = message;
+          const {
+            input,
+            includeSubdomains,
+            passwordMode,
+            protectionMode,
+            challengeInterval,
+            sitePassword,
+          } = message;
           const norm = normalizeDomain(input);
           if (norm.error) {
             sendResponse({ success: false, error: norm.error });
@@ -657,6 +679,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             name: formatDomainName(norm.domain),
             includeSubdomains: includeSubdomains ?? true,
             passwordMode: mode,
+            protectionMode: protectionMode || PROTECTION_MODES.EVERY_TAB,
+            challengeInterval: challengeInterval || CHALLENGE_INTERVALS.WEEKLY,
             security: siteSecurity,
             faviconUrl: favResult.faviconUrl,
             faviconSource: favResult.faviconSource,
@@ -670,6 +694,67 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           await syncDynamicRules();
           await updateBadge();
           sendResponse({ success: true, site: addRes.site });
+          break;
+        }
+
+        case MESSAGE_TYPES.UPDATE_SITE_PROTECTION: {
+          const {
+            siteId,
+            passwordMode,
+            protectionMode,
+            challengeInterval,
+            sitePassword,
+            currentAuthPassword,
+          } = message;
+
+          const sites = await getLockedSites();
+          const site = sites.find((s) => s.id === siteId || s.domain === siteId);
+          if (!site) {
+            sendResponse({ success: false, error: 'Site not found.' });
+            return;
+          }
+
+          const masterSec = await getSecurity();
+          let newSiteSecurity = site.security;
+
+          if (passwordMode === PASSWORD_MODES.SEPARATE) {
+            if (sitePassword) {
+              if (sitePassword.length < 4) {
+                sendResponse({ success: false, error: 'Password must be at least 4 characters.' });
+                return;
+              }
+              if (site.passwordMode === PASSWORD_MODES.SEPARATE && site.security && currentAuthPassword) {
+                const validSite = await verifyPassword(currentAuthPassword, site.security);
+                const validMaster = masterSec ? await verifyPassword(currentAuthPassword, masterSec) : false;
+                if (!validSite && !validMaster) {
+                  sendResponse({ success: false, error: 'Current password authorization failed.' });
+                  return;
+                }
+              }
+              newSiteSecurity = await createSecurityRecord(sitePassword);
+            }
+          } else if (passwordMode === PASSWORD_MODES.UNIVERSAL) {
+            if (site.passwordMode === PASSWORD_MODES.SEPARATE && site.security && currentAuthPassword) {
+              const validSite = await verifyPassword(currentAuthPassword, site.security);
+              const validMaster = masterSec ? await verifyPassword(currentAuthPassword, masterSec) : false;
+              if (!validSite && !validMaster) {
+                sendResponse({ success: false, error: 'Current password authorization failed.' });
+                return;
+              }
+            }
+            newSiteSecurity = null;
+          }
+
+          const updateRes = await updateSiteProtection(site.id, {
+            passwordMode: passwordMode || site.passwordMode || PASSWORD_MODES.UNIVERSAL,
+            protectionMode: protectionMode || site.protectionMode || PROTECTION_MODES.EVERY_TAB,
+            challengeInterval: challengeInterval || site.randomChallenge?.interval || CHALLENGE_INTERVALS.WEEKLY,
+            security: newSiteSecurity,
+          });
+
+          await syncDynamicRules();
+          await updateBadge();
+          sendResponse(updateRes);
           break;
         }
 
