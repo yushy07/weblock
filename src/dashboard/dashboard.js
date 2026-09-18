@@ -1,7 +1,15 @@
-import { MESSAGE_TYPES, POPULAR_SITES, QUESTION_BANK, PASSWORD_MODES } from '../utils/constants.js';
+import {
+  MESSAGE_TYPES,
+  POPULAR_SITES,
+  QUESTION_BANK,
+  PASSWORD_MODES,
+  PROTECTION_MODES,
+  CHALLENGE_INTERVALS,
+} from '../utils/constants.js';
 import { getIcon } from '../utils/icons.js';
 import { normalizeDomain, formatDomainName } from '../utils/domains.js';
 import { resolveFavicon, generateFallbackIcon } from '../utils/favicons.js';
+import { formatIntervalLabel } from '../security/random-challenge.js';
 
 // Navbar Elements
 const navBrandIcon = document.getElementById('navBrandIcon');
@@ -57,6 +65,9 @@ const addSiteSeparatePasswordFields = document.getElementById('addSiteSeparatePa
 const addSitePassword = document.getElementById('addSitePassword');
 const addSiteConfirmPassword = document.getElementById('addSiteConfirmPassword');
 const addSitePasswordModeRadios = document.getElementsByName('addSitePasswordMode');
+const addSiteProtectionModeRadios = document.getElementsByName('addSiteProtectionMode');
+const addSiteFrequencyGroup = document.getElementById('addSiteFrequencyGroup');
+const addSiteFrequencyRadios = document.getElementsByName('addSiteFrequency');
 
 // Onboarding Stepper
 const onboardingModal = document.getElementById('onboardingModal');

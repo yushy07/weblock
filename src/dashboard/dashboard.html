@@ -221,9 +221,9 @@
               </label>
             </div>
 
-            <!-- Protection Mode Choice -->
+            <!-- Password Mode Choice -->
             <div class="form-group mode-selection-group">
-              <label class="form-label">How should this website be protected?</label>
+              <label class="form-label">Password Mode</label>
               <div class="mode-options-grid">
                 <label class="mode-option-card">
                   <input type="radio" name="addSitePasswordMode" value="universal" checked>
@@ -270,6 +270,55 @@
                   placeholder="Re-enter password"
                   minlength="4"
                 />
+              </div>
+            </div>
+
+            <!-- Protection Mode Choice -->
+            <div class="form-group mode-selection-group">
+              <label class="form-label">Protection</label>
+              <div class="mode-options-grid">
+                <label class="mode-option-card">
+                  <input type="radio" name="addSiteProtectionMode" value="every-tab" checked>
+                  <div class="mode-option-content">
+                    <div class="mode-title-row">
+                      <span class="mode-icon">🔁</span>
+                      <strong>Every new tab</strong>
+                    </div>
+                    <p class="mode-desc">Ask for the password whenever this website is opened in a new tab.</p>
+                  </div>
+                </label>
+
+                <label class="mode-option-card">
+                  <input type="radio" name="addSiteProtectionMode" value="random">
+                  <div class="mode-option-content">
+                    <div class="mode-title-row">
+                      <span class="mode-icon">🎲</span>
+                      <strong>Random challenge</strong>
+                    </div>
+                    <p class="mode-desc">Ask occasionally at an unpredictable time.</p>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Challenge Frequency (Conditional for Random) -->
+            <div id="addSiteFrequencyGroup" style="display: none;">
+              <div class="form-group">
+                <label class="form-label">Challenge Frequency (min. 4 days)</label>
+                <div class="radio-stack">
+                  <label class="radio-option">
+                    <input type="radio" name="addSiteFrequency" value="7d" checked>
+                    <span><strong>Weekly</strong> (random challenge between 4 and 7 days)</span>
+                  </label>
+                  <label class="radio-option">
+                    <input type="radio" name="addSiteFrequency" value="14d">
+                    <span><strong>Every 2 weeks</strong> (random challenge between 4 and 14 days)</span>
+                  </label>
+                  <label class="radio-option">
+                    <input type="radio" name="addSiteFrequency" value="30d">
+                    <span><strong>Monthly</strong> (random challenge between 4 and 30 days)</span>
+                  </label>
+                </div>
               </div>
             </div>
           </div>
@@ -459,8 +508,8 @@
           <div class="modal-title-wrap">
             <div class="modal-icon" id="sitePasswordModalIcon"></div>
             <div>
-              <h3 id="sitePasswordModalTitle">Password Protection</h3>
-              <p class="modal-subtitle" id="sitePasswordModalSubtitle">Configure password mode</p>
+              <h3 id="sitePasswordModalTitle">Edit Protection</h3>
+              <p class="modal-subtitle" id="sitePasswordModalSubtitle">Configure credentials and challenge timing</p>
             </div>
           </div>
           <button class="close-btn" id="closeSitePasswordModalBtn" aria-label="Close modal">✕</button>
@@ -469,7 +518,7 @@
         <form id="sitePasswordForm">
           <div class="modal-body">
             <div class="form-group">
-              <label class="form-label">Protection Mode</label>
+              <label class="form-label">Password Mode</label>
               <div class="mode-options-grid">
                 <label class="mode-option-card">
                   <input type="radio" name="siteCardPasswordMode" value="universal">
@@ -528,6 +577,59 @@
                   placeholder="Re-enter password"
                   minlength="4"
                 />
+              </div>
+            </div>
+
+            <!-- Protection Mode Selection -->
+            <div class="form-group mode-selection-group">
+              <label class="form-label">Protection</label>
+              <div class="mode-options-grid">
+                <label class="mode-option-card">
+                  <input type="radio" name="siteCardProtectionMode" value="every-tab">
+                  <div class="mode-option-content">
+                    <div class="mode-title-row">
+                      <span class="mode-icon">🔁</span>
+                      <strong>Every new tab</strong>
+                    </div>
+                    <p class="mode-desc">Ask for the password whenever this website is opened in a new tab.</p>
+                  </div>
+                </label>
+
+                <label class="mode-option-card">
+                  <input type="radio" name="siteCardProtectionMode" value="random">
+                  <div class="mode-option-content">
+                    <div class="mode-title-row">
+                      <span class="mode-icon">🎲</span>
+                      <strong>Random challenge</strong>
+                    </div>
+                    <p class="mode-desc">Ask occasionally at an unpredictable time.</p>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Challenge Frequency Group -->
+            <div id="siteCardFrequencyGroup" style="display: none;">
+              <div class="form-group">
+                <label class="form-label">Challenge Frequency (min. 4 days)</label>
+                <div class="radio-stack">
+                  <label class="radio-option">
+                    <input type="radio" name="siteCardFrequency" value="7d">
+                    <span><strong>Weekly</strong> (random challenge between 4 and 7 days)</span>
+                  </label>
+                  <label class="radio-option">
+                    <input type="radio" name="siteCardFrequency" value="14d">
+                    <span><strong>Every 2 weeks</strong> (random challenge between 4 and 14 days)</span>
+                  </label>
+                  <label class="radio-option">
+                    <input type="radio" name="siteCardFrequency" value="30d">
+                    <span><strong>Monthly</strong> (random challenge between 4 and 30 days)</span>
+                  </label>
+                </div>
+                <div class="frequency-notice" id="siteCardFrequencyNotice" style="display: none;">
+                  <span>ℹ️</span>
+                  <span>Your new frequency will apply after your next successful authentication.</span>
+                </div>
               </div>
             </div>
 
