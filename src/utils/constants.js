@@ -19,12 +19,28 @@ export const MESSAGE_TYPES = {
   RESET_SITE_PASSWORD: 'RESET_SITE_PASSWORD',
   RESOLVE_FAVICON: 'RESOLVE_FAVICON',
   GET_SITE_DETAILS: 'GET_SITE_DETAILS',
+  UPDATE_SITE_PROTECTION: 'UPDATE_SITE_PROTECTION',
 };
 
 export const PASSWORD_MODES = {
   UNIVERSAL: 'universal',
   SEPARATE: 'separate',
 };
+
+export const PROTECTION_MODES = {
+  EVERY_TAB: 'every-tab',
+  RANDOM: 'random',
+};
+
+export const CHALLENGE_INTERVALS = {
+  WEEKLY: '7d',
+  TWO_WEEKS: '14d',
+  MONTHLY: '30d',
+};
+
+export const MIN_RANDOM_CHALLENGE_WAIT_MS = 4 * 24 * 60 * 60 * 1000; // 4 days
+
+export const ALARM_PREFIX = 'weblock_challenge_';
 
 export const QUESTION_BANK = [
   { id: 'q_school', question: 'What was the name of your first school?' },

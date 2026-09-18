@@ -1,4 +1,4 @@
-import { DNR_RULE_ID_OFFSET } from '../utils/constants.js';
+import { DNR_RULE_ID_OFFSET, PROTECTION_MODES } from '../utils/constants.js';
 import { buildDnrRegex } from '../utils/domains.js';
 import {
   getSettings,
@@ -8,6 +8,23 @@ import {
 } from '../storage/storage.js';
 
 let nextSessionRuleId = DNR_RULE_ID_OFFSET.SESSION;
+
+/**
+ * Determines whether a site should currently have an active DNR redirect rule.
+ *
+ * @param {object} site
+ * @returns {boolean}
+ */
+export function shouldSiteBeRedirected(site) {
+  if (!site || site.enabled === false) {
+    return false;
+  }
+  if (site.protectionMode === PROTECTION_MODES.RANDOM) {
+    return site.randomChallenge?.challengeActive === true;
+  }
+  // Default: every-tab
+  return true;
+}
 
 /**
  * Synchronizes declarativeNetRequest dynamic rules with the current list of locked sites.
@@ -36,8 +53,8 @@ export async function syncDynamicRules() {
     return;
   }
 
-  // Filter only active locked sites
-  const activeSites = lockedSites.filter((s) => s.enabled !== false);
+  // Filter only sites that should currently have an active redirect rule
+  const activeSites = lockedSites.filter((s) => shouldSiteBeRedirected(s));
   const extId = chrome.runtime.id;
   const lockPageBase = `chrome-extension://${extId}/src/lock/lock.html`;
 

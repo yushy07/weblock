@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "description": "AppLock for Chrome. Password-protect YouTube, Instagram, Reddit, and custom websites with per-tab authentication.",
   "permissions": [
+    "alarms",
     "declarativeNetRequest",
     "storage",
     "tabs",

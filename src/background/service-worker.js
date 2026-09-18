@@ -1,4 +1,11 @@
-import { MESSAGE_TYPES, RATE_LIMIT, PASSWORD_MODES } from '../utils/constants.js';
+import {
+  MESSAGE_TYPES,
+  RATE_LIMIT,
+  PASSWORD_MODES,
+  PROTECTION_MODES,
+  CHALLENGE_INTERVALS,
+  ALARM_PREFIX,
+} from '../utils/constants.js';
 import { normalizeDomain, formatDomainName } from '../utils/domains.js';
 import { resolveFavicon } from '../utils/favicons.js';
 import {
@@ -10,15 +17,24 @@ import {
   createSecurityRecord,
 } from '../security/crypto.js';
 import {
+  isChallengeDue,
+  resetChallenge,
+  scheduleChallengeAlarm,
+  clearChallengeAlarm,
+  getAlarmName,
+} from '../security/random-challenge.js';
+import {
   getSettings,
   saveSettings,
   getSecurity,
   saveSecurity,
   getLockedSites,
+  saveLockedSites,
   getSiteByDomain,
   addLockedSite,
   updateSite,
   updateSiteSecurity,
+  updateSiteProtection,
   updateSiteFavicon,
   removeLockedSite,
   toggleLockedSite,
@@ -67,10 +83,71 @@ function isIncognitoAllowed() {
   });
 }
 
+/**
+ * Reconciles random challenge state across all locked websites.
+ * 1. Checks Date.now() against nextChallengeAt.
+ * 2. If challenge timestamp has already passed -> sets challengeActive = true and enables DNR redirect rule.
+ * 3. If challenge timestamp is in the future -> ensures chrome.alarms alarm exists without shortening cooldown.
+ * 4. Persists any changes and synchronizes DNR dynamic rules.
+ */
+export async function reconcileRandomChallenges() {
+  const sites = await getLockedSites();
+  const now = Date.now();
+  let modified = false;
+
+  for (const site of sites) {
+    if (site.protectionMode !== PROTECTION_MODES.RANDOM || !site.randomChallenge) {
+      continue;
+    }
+
+    const challenge = site.randomChallenge;
+    if (typeof challenge.nextChallengeAt === 'number' && now >= challenge.nextChallengeAt) {
+      if (!challenge.challengeActive) {
+        challenge.challengeActive = true;
+        modified = true;
+      }
+    } else if (typeof challenge.nextChallengeAt === 'number' && now < challenge.nextChallengeAt) {
+      if (typeof chrome !== 'undefined' && chrome.alarms?.get) {
+        const alarmName = getAlarmName(site.id);
+        const existing = await chrome.alarms.get(alarmName);
+        if (!existing) {
+          await scheduleChallengeAlarm(site);
+        }
+      }
+    }
+  }
+
+  if (modified) {
+    await saveLockedSites(sites);
+  }
+  await syncDynamicRules();
+}
+
+// Alarm listener for random challenge activations
+if (typeof chrome !== 'undefined' && chrome.alarms?.onAlarm) {
+  chrome.alarms.onAlarm.addListener(async (alarm) => {
+    if (!alarm?.name || !alarm.name.startsWith(ALARM_PREFIX)) return;
+    const siteId = alarm.name.replace(ALARM_PREFIX, '');
+
+    const sites = await getLockedSites();
+    const site = sites.find((s) => s.id === siteId);
+    if (site && site.protectionMode === PROTECTION_MODES.RANDOM && site.randomChallenge) {
+      site.randomChallenge.challengeActive = true;
+      await saveLockedSites(sites);
+      await syncDynamicRules();
+      console.log(`[WebLock] Random challenge activated for ${site.domain} via alarm.`);
+    }
+  });
+}
+
+// Top-level worker reconciliation
+reconcileRandomChallenges().catch((e) => console.warn('[WebLock] Reconcile on init error:', e));
+
 // Extension installation & startup hooks
 chrome.runtime.onInstalled.addListener(async (details) => {
   console.log('[WebLock] Installed/Updated:', details.reason);
   await migrateStorage();
+  await reconcileRandomChallenges();
   await syncDynamicRules();
   await updateBadge();
 
@@ -83,6 +160,7 @@ chrome.runtime.onInstalled.addListener(async (details) => {
 chrome.runtime.onStartup.addListener(async () => {
   console.log('[WebLock] Chrome startup.');
   await migrateStorage();
+  await reconcileRandomChallenges();
   await syncDynamicRules();
   await updateBadge();
 });

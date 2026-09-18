@@ -1,5 +1,10 @@
-import { DEFAULT_SETTINGS, PASSWORD_MODES } from '../utils/constants.js';
+import { DEFAULT_SETTINGS, PASSWORD_MODES, PROTECTION_MODES, CHALLENGE_INTERVALS } from '../utils/constants.js';
 import { formatDomainName } from '../utils/domains.js';
+import {
+  generateNextChallenge,
+  scheduleChallengeAlarm,
+  clearChallengeAlarm,
+} from '../security/random-challenge.js';
 
 export const STORAGE_KEYS = {
   SETTINGS: 'weblock_settings',
@@ -79,6 +84,8 @@ export async function migrateStorage() {
           enabled: true,
           includeSubdomains: true,
           passwordMode: PASSWORD_MODES.UNIVERSAL,
+          protectionMode: PROTECTION_MODES.EVERY_TAB,
+          randomChallenge: null,
           security: null,
           faviconUrl: null,
           faviconData: null,
@@ -147,6 +154,19 @@ export async function migrateStorage() {
         if (!updated.passwordMode) {
           updated.passwordMode = PASSWORD_MODES.UNIVERSAL;
           sitesModified = true;
+        }
+        if (!updated.protectionMode) {
+          updated.protectionMode = PROTECTION_MODES.EVERY_TAB;
+          sitesModified = true;
+        }
+        if (updated.randomChallenge === undefined) {
+          updated.randomChallenge = null;
+          sitesModified = true;
+        } else if (updated.protectionMode === PROTECTION_MODES.RANDOM && updated.randomChallenge) {
+          if (typeof updated.randomChallenge.challengeActive !== 'boolean') {
+            updated.randomChallenge.challengeActive = false;
+            sitesModified = true;
+          }
         }
         if (updated.security === undefined) {
           updated.security = null;
@@ -250,6 +270,8 @@ export async function addLockedSite({
   name,
   includeSubdomains = true,
   passwordMode = PASSWORD_MODES.UNIVERSAL,
+  protectionMode = PROTECTION_MODES.EVERY_TAB,
+  challengeInterval = CHALLENGE_INTERVALS.WEEKLY,
   security = null,
   faviconUrl = null,
   faviconData = null,
@@ -261,6 +283,19 @@ export async function addLockedSite({
     return { success: false, error: 'This domain is already locked.' };
   }
 
+  let randomChallenge = null;
+  const isRandom = protectionMode === PROTECTION_MODES.RANDOM;
+  if (isRandom) {
+    const now = Date.now();
+    const interval = challengeInterval || CHALLENGE_INTERVALS.WEEKLY;
+    randomChallenge = {
+      interval,
+      lastAuthenticatedAt: now,
+      nextChallengeAt: generateNextChallenge(interval, now),
+      challengeActive: false,
+    };
+  }
+
   const newSite = {
     id: 'site_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
     domain,
@@ -268,6 +303,8 @@ export async function addLockedSite({
     enabled: true,
     includeSubdomains: includeSubdomains !== false,
     passwordMode: passwordMode || PASSWORD_MODES.UNIVERSAL,
+    protectionMode: protectionMode || PROTECTION_MODES.EVERY_TAB,
+    randomChallenge,
     security: security || null,
     faviconUrl: faviconUrl || null,
     faviconData: faviconData || null,
@@ -277,6 +314,11 @@ export async function addLockedSite({
 
   sites.push(newSite);
   await saveLockedSites(sites);
+
+  if (isRandom) {
+    await scheduleChallengeAlarm(newSite);
+  }
+
   return { success: true, site: newSite };
 }
 
@@ -299,6 +341,64 @@ export async function updateSiteSecurity(siteId, { passwordMode, security }) {
   });
 }
 
+export async function updateSiteProtection(siteId, {
+  passwordMode,
+  protectionMode,
+  challengeInterval,
+  security,
+}) {
+  const sites = await getLockedSites();
+  const index = sites.findIndex((s) => s.id === siteId || s.domain === siteId);
+  if (index === -1) {
+    return { success: false, error: 'Site not found.' };
+  }
+
+  const site = sites[index];
+  const oldProtectionMode = site.protectionMode || PROTECTION_MODES.EVERY_TAB;
+  const targetProtectionMode = protectionMode || oldProtectionMode;
+
+  const updates = {};
+  if (passwordMode !== undefined) {
+    updates.passwordMode = passwordMode;
+  }
+  if (security !== undefined) {
+    updates.security = security;
+  }
+
+  if (targetProtectionMode === PROTECTION_MODES.RANDOM) {
+    updates.protectionMode = PROTECTION_MODES.RANDOM;
+    if (oldProtectionMode !== PROTECTION_MODES.RANDOM || !site.randomChallenge) {
+      // Switching from every-tab to random: initialize without immediate challenge
+      const now = Date.now();
+      const interval = challengeInterval || CHALLENGE_INTERVALS.WEEKLY;
+      updates.randomChallenge = {
+        interval,
+        lastAuthenticatedAt: now,
+        nextChallengeAt: generateNextChallenge(interval, now),
+        challengeActive: false,
+      };
+      await scheduleChallengeAlarm({ id: site.id, domain: site.domain, randomChallenge: updates.randomChallenge });
+    } else {
+      // Already random: user updating frequency preference
+      // Keep existing nextChallengeAt and challengeActive unchanged!
+      const interval = challengeInterval || site.randomChallenge.interval || CHALLENGE_INTERVALS.WEEKLY;
+      updates.randomChallenge = {
+        ...site.randomChallenge,
+        interval,
+      };
+    }
+  } else {
+    // Switching to every-tab
+    updates.protectionMode = PROTECTION_MODES.EVERY_TAB;
+    updates.randomChallenge = null;
+    await clearChallengeAlarm(site.id);
+  }
+
+  sites[index] = { ...site, ...updates };
+  await saveLockedSites(sites);
+  return { success: true, site: sites[index] };
+}
+
 export async function updateSiteFavicon(siteId, { faviconUrl, faviconData, faviconSource }) {
   return await updateSite(siteId, {
     faviconUrl: faviconUrl || null,
@@ -309,6 +409,10 @@ export async function updateSiteFavicon(siteId, { faviconUrl, faviconData, favic
 
 export async function removeLockedSite(siteId) {
   const sites = await getLockedSites();
+  const targetSite = sites.find((s) => s.id === siteId || s.domain === siteId);
+  if (targetSite) {
+    await clearChallengeAlarm(targetSite.id);
+  }
   const filtered = sites.filter((s) => s.id !== siteId && s.domain !== siteId);
   await saveLockedSites(filtered);
   return filtered;
