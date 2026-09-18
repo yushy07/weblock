@@ -92,19 +92,28 @@ export function isChallengeDue(site, now = Date.now()) {
  * @param {number} [now=Date.now()]
  * @returns {object} Updated site object
  */
-export function initializeChallenge(site, now = Date.now()) {
-  const interval = site.randomChallenge?.interval || CHALLENGE_INTERVALS.WEEKLY;
+export function initializeChallenge(siteOrInterval = CHALLENGE_INTERVALS.WEEKLY, now = Date.now()) {
+  const isString = typeof siteOrInterval === 'string';
+  const interval = isString
+    ? siteOrInterval
+    : (siteOrInterval?.randomChallenge?.interval || siteOrInterval?.challengeInterval || CHALLENGE_INTERVALS.WEEKLY);
   const nextChallengeAt = generateNextChallenge(interval, now);
 
+  const challengeObj = {
+    interval,
+    lastAuthenticatedAt: now,
+    nextChallengeAt,
+    challengeActive: false,
+  };
+
+  if (isString) {
+    return challengeObj;
+  }
+
   return {
-    ...site,
+    ...siteOrInterval,
     protectionMode: PROTECTION_MODES.RANDOM,
-    randomChallenge: {
-      interval,
-      lastAuthenticatedAt: now,
-      nextChallengeAt,
-      challengeActive: false,
-    },
+    randomChallenge: challengeObj,
   };
 }
 
