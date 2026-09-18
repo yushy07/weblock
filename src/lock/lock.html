@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Website Locked — WebLock</title>
+  <link rel="stylesheet" href="lock.css">
+</head>
+<body>
+  <!-- Ambient Dynamic Mesh Background -->
+  <div class="mesh-background">
+    <div class="glow-orb orb-primary"></div>
+    <div class="glow-orb orb-secondary"></div>
+    <div class="grid-overlay"></div>
+  </div>
+
+  <main class="lock-wrapper">
+    <div class="lock-card" id="lockCard">
+      <!-- Top Specular Highlight Line -->
+      <div class="card-glass-specular"></div>
+
+      <!-- Favicon / Shield Avatar -->
+      <div class="avatar-container">
+        <div class="avatar-ring"></div>
+        <div class="site-avatar" id="siteAvatar">
+          <img id="siteFavicon" class="favicon-img" alt="" style="display: none;" />
+          <span id="siteInitial" class="initial-text">🔒</span>
+        </div>
+      </div>
+
+      <!-- Headers -->
+      <div class="lock-header">
+        <div class="security-chip" id="securityChip">
+          <span class="pulse-dot"></span>
+          <span class="chip-text" id="chipText">AppLock Protection Active</span>
+        </div>
+        <h1 class="lock-title" id="lockTitle">Access Restricted</h1>
+        <p class="lock-subtitle" id="lockSubtitle">This website is protected by <strong class="brand-highlight">WebLock</strong></p>
+        
+        <div class="domain-pill" id="siteBadge">
+          <span class="secure-icon" id="domainLockIcon"></span>
+          <span class="site-domain" id="siteDomain">protected-site.com</span>
+        </div>
+
+        <div class="mode-tag-wrap">
+          <span class="mode-pill" id="lockModeBadge">🔐 Protected by your WebLock password</span>
+        </div>
+      </div>
+
+      <!-- Unlock Form -->
+      <form class="lock-form" id="lockForm" autocomplete="off">
+        <div class="input-container">
+          <div class="input-wrapper" id="inputWrapper">
+            <span class="input-icon" id="keyIconContainer"></span>
+            <input
+              type="password"
+              id="passwordInput"
+              placeholder="Enter WebLock password"
+              required
+              autofocus
+              autocomplete="current-password"
+            />
+            <button type="button" class="toggle-password" id="togglePassword" aria-label="Toggle password visibility" title="Show/hide password">
+              <!-- Injected Eye Icon -->
+            </button>
+          </div>
+
+          <!-- Caps Lock Warning -->
+          <div class="caps-warning" id="capsWarning" style="display: none;">
+            <span class="caps-icon">⇪</span>
+            <span>Caps Lock is ON</span>
+          </div>
+
+          <!-- Error Feedback Banner -->
+          <div class="error-banner" id="errorBanner" style="display: none;"></div>
+        </div>
+
+        <button type="submit" class="unlock-button" id="unlockButton">
+          <span class="btn-content">
+            <span class="button-icon" id="btnLockIcon"></span>
+            <span class="button-text">Unlock This Tab</span>
+          </span>
+          <span class="button-spinner" style="display: none;"></span>
+        </button>
+
+        <div class="forgot-link-row">
+          <button type="button" class="text-link" id="forgotPasswordBtn">Forgot password?</button>
+        </div>
+      </form>
+
+      <!-- Security Meta Footer -->
+      <footer class="lock-footer">
+        <div class="footer-info">
+          <span class="shield-mini" id="miniShieldIcon"></span>
+          <span>Tab-scoped bypass • Other tabs remain locked</span>
+        </div>
+      </footer>
+
+      <!-- Universal Password Recovery Modal (Hidden by default) -->
+      <div class="modal-overlay" id="recoveryModal" style="display: none;">
+        <div class="modal-dialog">
+          <div class="modal-header">
+            <div>
+              <h3 class="modal-title">Recover WebLock Password</h3>
+              <p class="modal-desc">Answer any one of your 3 security questions to reset your master password.</p>
+            </div>
+            <button type="button" class="modal-close" id="closeRecoveryModalBtn">✕</button>
+          </div>
+
+          <form id="recoveryForm">
+            <div class="modal-body" id="recoveryConfiguredBody">
+              <div class="form-group">
+                <label class="form-label" for="recoveryQuestionSelect">Choose a Security Question</label>
+                <select id="recoveryQuestionSelect" class="form-select" required>
+                  <!-- Populated dynamically -->
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="recoveryAnswerInput">Your Answer</label>
+                <input
+                  type="text"
+                  id="recoveryAnswerInput"
+                  class="form-input"
+                  placeholder="Enter your security answer"
+                  required
+                  autocomplete="off"
+                />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="newMasterPwInput">New Master Password</label>
+                <input
+                  type="password"
+                  id="newMasterPwInput"
+                  class="form-input"
+                  placeholder="At least 4 characters"
+                  minlength="4"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="confirmMasterPwInput">Confirm New Password</label>
+                <input
+                  type="password"
+                  id="confirmMasterPwInput"
+                  class="form-input"
+                  placeholder="Re-enter new password"
+                  minlength="4"
+                  required
+                />
+              </div>
+
+              <div class="modal-error" id="recoveryError" style="display: none;"></div>
+            </div>
+
+            <!-- Unconfigured state -->
+            <div class="modal-body" id="recoveryUnconfiguredBody" style="display: none;">
+              <p class="unconfigured-note">Security recovery questions have not been configured yet. You can set them up or reconfigure WebLock in the extension options page.</p>
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" id="cancelRecoveryBtn">Cancel</button>
+              <button type="submit" class="btn btn-primary glow-btn" id="submitRecoveryBtn">Reset Password</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Site-Specific Password Reset Modal (Hidden by default) -->
+      <div class="modal-overlay" id="siteResetModal" style="display: none;">
+        <div class="modal-dialog">
+          <div class="modal-header">
+            <div>
+              <h3 class="modal-title" id="siteResetTitle">Reset Website Password</h3>
+              <p class="modal-desc">Authorize with your master WebLock password to reset protection for this site.</p>
+            </div>
+            <button type="button" class="modal-close" id="closeSiteResetBtn">✕</button>
+          </div>
+
+          <form id="siteResetForm">
+            <div class="modal-body">
+              <div class="form-group">
+                <label class="form-label" for="siteResetMasterPw">Master WebLock Password</label>
+                <input
+                  type="password"
+                  id="siteResetMasterPw"
+                  class="form-input"
+                  placeholder="Enter master password"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Protection Mode</label>
+                <div class="radio-stack">
+                  <label class="radio-option">
+                    <input type="radio" name="siteResetChoice" value="universal" checked>
+                    <span><strong>Use WebLock password</strong> (revert to master password)</span>
+                  </label>
+                  <label class="radio-option">
+                    <input type="radio" name="siteResetChoice" value="separate">
+                    <span><strong>Set a new separate password</strong></span>
+                  </label>
+                </div>
+              </div>
+
+              <div id="newSitePwGroup" style="display: none;">
+                <div class="form-group">
+                  <label class="form-label" for="newSitePwInput">New Separate Password</label>
+                  <input
+                    type="password"
+                    id="newSitePwInput"
+                    class="form-input"
+                    placeholder="Min. 4 characters"
+                    minlength="4"
+                  />
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="confirmSitePwInput">Confirm New Separate Password</label>
+                  <input
+                    type="password"
+                    id="confirmSitePwInput"
+                    class="form-input"
+                    placeholder="Re-enter new password"
+                    minlength="4"
+                  />
+                </div>
+              </div>
+
+              <div class="modal-error" id="siteResetError" style="display: none;"></div>
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" id="cancelSiteResetBtn">Cancel</button>
+              <button type="submit" class="btn btn-primary glow-btn" id="submitSiteResetBtn">Authorize & Reset</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script type="module" src="lock.js"></script>
+</body>
+</html>

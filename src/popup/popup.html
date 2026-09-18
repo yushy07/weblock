@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebLock</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-wrapper">
+    <!-- Header -->
+    <header class="popup-header">
+      <div class="brand">
+        <div class="brand-avatar" id="brandIcon"></div>
+        <div class="brand-info">
+          <span class="brand-name">WebLock</span>
+          <span class="brand-version">v1.0 • AppLock</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" id="relockAllBtn" title="Relock All Tabs Now">
+          <span id="relockIcon"></span>
+        </button>
+        <button class="icon-btn" id="openSettingsBtn" title="Extension Settings">
+          <span id="settingsIcon"></span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Global Protection Status Card -->
+    <div class="hero-status-card" id="statusCard">
+      <div class="status-left">
+        <div class="status-badge-row">
+          <span class="pulse-ring" id="statusDot"></span>
+          <span class="status-title" id="statusText">Protection Active</span>
+        </div>
+        <div class="status-details" id="statusSubtext">Enforcing rules via DNR</div>
+      </div>
+      <label class="modern-switch" title="Toggle Global Protection">
+        <input type="checkbox" id="globalToggle" checked>
+        <span class="switch-slider"></span>
+      </label>
+    </div>
+
+    <!-- Active Tab Context Card -->
+    <div class="active-tab-card" id="activeTabCard" style="display: none;">
+      <div class="active-tab-header">
+        <span class="tab-label">CURRENT TAB</span>
+        <span class="tab-mode-pill" id="activeTabModePill" style="display: none;"></span>
+      </div>
+      <div class="active-tab-body">
+        <div class="tab-site-info">
+          <img id="currentTabFavicon" class="tab-favicon" alt="" style="display: none;" />
+          <span id="currentTabInitial" class="tab-initial">🌐</span>
+          <span class="tab-domain" id="currentTabDomainText">youtube.com</span>
+        </div>
+        <div class="tab-action-wrap" id="currentTabActionWrap">
+          <button class="btn-lock-tab" id="quickLockBtn">
+            <span id="quickLockPlusIcon"></span>
+            <span>Lock Website</span>
+          </button>
+          <span class="protected-pill" id="alreadyProtectedPill" style="display: none;">
+            <span id="pillCheckIcon"></span> Protected
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Pill Row -->
+    <div class="stats-strip">
+      <div class="stat-pill" id="lockedCountBadge">
+        <span id="badgeLockIcon"></span>
+        <span id="lockedCountText">0 locked</span>
+      </div>
+      <div class="stat-pill" id="incognitoBadge" title="Incognito Mode Protection">
+        <span id="badgeShieldIcon"></span>
+        <span id="incognitoText">Incognito</span>
+      </div>
+    </div>
+
+    <!-- Protected Sites Section -->
+    <div class="sites-section">
+      <div class="section-top">
+        <span class="section-title">Protected Websites</span>
+        <span class="site-count-sub" id="sitesHeaderCount"></span>
+      </div>
+      <div class="mini-site-list" id="miniSiteList">
+        <div class="empty-state" id="emptyState">No websites locked yet</div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="popup-footer">
+      <button class="btn-open-dashboard" id="openDashboardBtn">
+        <span>Manage All Websites</span>
+        <span id="arrowRightIcon"></span>
+      </button>
+    </footer>
+
+    <!-- Toast Notification Overlay -->
+    <div class="toast-notice" id="popupToast" style="display: none;"></div>
+  </div>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

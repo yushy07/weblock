@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — WebLock</title>
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+  <div class="dashboard-layout">
+    <!-- Navbar -->
+    <header class="navbar">
+      <div class="nav-container">
+        <div class="nav-brand">
+          <div class="brand-badge" id="navBrandIcon"></div>
+          <div class="brand-text">
+            <span class="brand-title">WebLock</span>
+            <span class="brand-tagline">Stay intentional.</span>
+          </div>
+        </div>
+
+        <div class="nav-center">
+          <div class="global-pill-status" id="navGlobalPill">
+            <span class="pulse-dot" id="navStatusDot"></span>
+            <span class="pill-label" id="navStatusText">Protection Active</span>
+          </div>
+        </div>
+
+        <div class="nav-actions">
+          <button class="btn btn-secondary" id="navSettingsBtn">
+            <span id="navSettingsIcon"></span>
+            <span>Settings</span>
+          </button>
+          <button class="btn btn-primary glow-btn" id="openAddModalBtn">
+            <span id="navPlusIcon"></span>
+            <span>Add Website</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="content-container">
+
+        <!-- Incognito Notice Banner (if disabled in Chrome) -->
+        <div class="alert-banner" id="incognitoAlertBanner" style="display: none;">
+          <div class="alert-content">
+            <span class="alert-icon-wrap" id="alertIcon"></span>
+            <div class="alert-text">
+              <strong>Incognito protection is disabled</strong>
+              <span>To lock websites in private browsing windows, enable "Allow in Incognito" in Chrome extension settings.</span>
+            </div>
+          </div>
+          <button class="btn btn-sm btn-outline-warning" id="enableIncognitoBtn">Configure in Chrome</button>
+        </div>
+
+        <!-- Metrics Grid -->
+        <div class="metrics-grid">
+          <!-- Card 1: Protection Status -->
+          <div class="metric-card">
+            <div class="card-specular"></div>
+            <div class="metric-header">
+              <span class="metric-title">Master Protection</span>
+              <span class="metric-icon" id="shieldStatusIcon"></span>
+            </div>
+            <div class="metric-body">
+              <div class="status-indicator">
+                <span class="status-dot" id="dashStatusDot"></span>
+                <span class="status-value" id="dashStatusText">Active</span>
+              </div>
+              <p class="metric-desc">Intercepting navigations instantly via DNR</p>
+            </div>
+            <div class="metric-footer">
+              <label class="modern-switch">
+                <input type="checkbox" id="dashGlobalToggle" checked>
+                <span class="switch-slider"></span>
+              </label>
+              <span class="switch-label" id="dashToggleLabel">Protection Enabled</span>
+            </div>
+          </div>
+
+          <!-- Card 2: Locked Sites -->
+          <div class="metric-card">
+            <div class="card-specular"></div>
+            <div class="metric-header">
+              <span class="metric-title">Locked Websites</span>
+              <span class="metric-icon" id="lockMetricIcon"></span>
+            </div>
+            <div class="metric-body">
+              <div class="metric-number-wrap">
+                <span class="metric-number" id="dashLockedCount">0</span>
+                <span class="metric-unit">sites</span>
+              </div>
+              <p class="metric-desc">Requiring per-tab authentication</p>
+            </div>
+            <div class="metric-footer">
+              <span class="pill-badge pill-purple" id="authModePill">Per-Tab Mode</span>
+            </div>
+          </div>
+
+          <!-- Card 3: Incognito Mode -->
+          <div class="metric-card">
+            <div class="card-specular"></div>
+            <div class="metric-header">
+              <span class="metric-title">Private Browsing</span>
+              <span class="metric-icon" id="incognitoMetricIcon"></span>
+            </div>
+            <div class="metric-body">
+              <div class="status-indicator">
+                <span class="status-dot" id="dashIncognitoDot"></span>
+                <span class="status-value" id="dashIncognitoText">Protected</span>
+              </div>
+              <p class="metric-desc">Private windows enforce site locks</p>
+            </div>
+            <div class="metric-footer">
+              <span class="pill-badge" id="incognitoStatusPill">Ready</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Websites Section -->
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-title-wrap">
+              <h2 class="section-heading">Protected Websites</h2>
+              <p class="section-subheading">Websites locked across all normal and private tabs</p>
+            </div>
+
+            <!-- Controls: Search & Filters -->
+            <div class="section-controls">
+              <div class="filter-tabs" id="filterTabs">
+                <button class="filter-tab active" data-filter="all">All</button>
+                <button class="filter-tab" data-filter="active">Active</button>
+                <button class="filter-tab" data-filter="paused">Paused</button>
+              </div>
+
+              <div class="search-box">
+                <span id="searchIcon"></span>
+                <input type="text" id="searchInput" placeholder="Search domains... (Press / to focus)" />
+                <button class="search-clear" id="searchClearBtn" style="display: none;">✕</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sites List -->
+          <div class="sites-list" id="sitesList">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- Add Website Modal -->
+    <div class="modal-backdrop" id="addModalBackdrop" style="display: none;">
+      <div class="modal-card">
+        <div class="card-specular"></div>
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <div class="modal-icon" id="modalPlusIcon"></div>
+            <div>
+              <h3>Lock Website</h3>
+              <p class="modal-subtitle">Add a domain to protect across tabs</p>
+            </div>
+          </div>
+          <button class="close-btn" id="closeAddModalBtn" aria-label="Close modal">
+            <span id="modalCloseIcon"></span>
+          </button>
+        </div>
+
+        <form id="addSiteForm">
+          <div class="modal-body">
+            <!-- Popular Presets -->
+            <div class="presets-section">
+              <label class="form-label">Quick Presets</label>
+              <div class="preset-chips" id="presetChips">
+                <!-- Preset chips -->
+              </div>
+            </div>
+
+            <!-- URL Input -->
+            <div class="form-group">
+              <label class="form-label" for="siteUrlInput">Website URL or Domain</label>
+              <div class="input-glow-wrapper">
+                <input
+                  type="text"
+                  id="siteUrlInput"
+                  class="form-input"
+                  placeholder="e.g. youtube.com or https://reddit.com"
+                  required
+                  autocomplete="off"
+                />
+              </div>
+
+              <!-- Live Domain & Favicon Preview Card -->
+              <div class="domain-preview-card" id="domainPreviewCard" style="display: none;">
+                <div class="preview-avatar-wrap">
+                  <img id="addPreviewFavicon" class="preview-favicon-img" alt="" style="display: none;" />
+                  <span id="addPreviewInitial" class="preview-initial-text">🌐</span>
+                </div>
+                <div class="preview-details">
+                  <span class="preview-name" id="previewSiteName">YouTube</span>
+                  <span class="preview-domain" id="previewDomainText">youtube.com</span>
+                </div>
+                <span class="preview-badge">Ready to Lock</span>
+              </div>
+
+              <div class="form-error" id="addSiteError" style="display: none;"></div>
+            </div>
+
+            <!-- Subdomains Option -->
+            <div class="checkbox-group">
+              <label class="custom-checkbox">
+                <input type="checkbox" id="includeSubdomainsCheck" checked>
+                <span class="checkmark"></span>
+                <span class="checkbox-label">
+                  <strong>Include all subdomains</strong>
+                  <span class="checkbox-subtext">Also locks music.youtube.com, studio.youtube.com, etc.</span>
+                </span>
+              </label>
+            </div>
+
+            <!-- Protection Mode Choice -->
+            <div class="form-group mode-selection-group">
+              <label class="form-label">How should this website be protected?</label>
+              <div class="mode-options-grid">
+                <label class="mode-option-card">
+                  <input type="radio" name="addSitePasswordMode" value="universal" checked>
+                  <div class="mode-option-content">
+                    <div class="mode-title-row">
+                      <span class="mode-icon">🔐</span>
+                      <strong>Use WebLock password</strong>
+                    </div>
+                    <p class="mode-desc">Same password used for other protected sites</p>
+                  </div>
+                </label>
+
+                <label class="mode-option-card">
+                  <input type="radio" name="addSitePasswordMode" value="separate">
+                  <div class="mode-option-content">
+                    <div class="mode-title-row">
+                      <span class="mode-icon">🔑</span>
+                      <strong>Use a separate password</strong>
+                    </div>
+                    <p class="mode-desc">Only this website uses this password</p>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Separate Password Input (Conditional) -->
+            <div id="addSiteSeparatePasswordFields" style="display: none;">
+              <div class="form-group">
+                <label class="form-label" for="addSitePassword">Password for this website</label>
+                <input
+                  type="password"
+                  id="addSitePassword"
+                  class="form-input"
+                  placeholder="Min. 4 characters"
+                  minlength="4"
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="addSiteConfirmPassword">Confirm Password</label>
+                <input
+                  type="password"
+                  id="addSiteConfirmPassword"
+                  class="form-input"
+                  placeholder="Re-enter password"
+                  minlength="4"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="cancelAddModalBtn">Cancel</button>
+            <button type="submit" class="btn btn-primary glow-btn" id="submitAddSiteBtn">
+              <span>Lock Website</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Onboarding Modal Wizard -->
+    <div class="modal-backdrop" id="onboardingModal" style="display: none;">
+      <div class="modal-card onboarding-card">
+        <div class="card-specular"></div>
+
+        <!-- Stepper Indicator -->
+        <div class="stepper-bar">
+          <div class="step-indicator active" id="stepIndicator1">
+            <span class="step-num">1</span>
+            <span class="step-name">Welcome</span>
+          </div>
+          <div class="step-line" id="stepLine1"></div>
+          <div class="step-indicator" id="stepIndicator2">
+            <span class="step-num">2</span>
+            <span class="step-name">Password</span>
+          </div>
+          <div class="step-line" id="stepLine2"></div>
+          <div class="step-indicator" id="stepIndicator3">
+            <span class="step-num">3</span>
+            <span class="step-name">Recovery</span>
+          </div>
+          <div class="step-line" id="stepLine3"></div>
+          <div class="step-indicator" id="stepIndicator4">
+            <span class="step-num">4</span>
+            <span class="step-name">Websites</span>
+          </div>
+        </div>
+
+        <!-- Step 1: Welcome -->
+        <div class="onboarding-step" id="step1">
+          <div class="onboarding-hero">
+            <div class="hero-icon-ring">
+              <div class="hero-icon" id="heroLockIcon"></div>
+            </div>
+            <h2 class="hero-title">Welcome to WebLock</h2>
+            <p class="hero-subtitle">Your websites. Your rules. Smartphone-style AppLock protection natively built for Google Chrome.</p>
+          </div>
+          <div class="onboarding-features">
+            <div class="feature-item">
+              <span class="feature-bullet">🔒</span>
+              <div>
+                <strong>Per-Tab Authentication</strong>
+                <p>Unlock in one tab to watch or browse; other tabs stay securely locked.</p>
+              </div>
+            </div>
+            <div class="feature-item">
+              <span class="feature-bullet">⚡</span>
+              <div>
+                <strong>Zero Leak DNR Engine</strong>
+                <p>Main-frame network requests are redirected before the site loads.</p>
+              </div>
+            </div>
+            <div class="feature-item">
+              <span class="feature-bullet">🛡️</span>
+              <div>
+                <strong>PBKDF2 Web Crypto</strong>
+                <p>100% offline & local-first. No servers, no accounts, zero tracking.</p>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer single-footer">
+            <button class="btn btn-primary btn-block glow-btn" id="startSetupBtn">Get Started</button>
+          </div>
+        </div>
+
+        <!-- Step 2: Master Password -->
+        <div class="onboarding-step" id="step2" style="display: none;">
+          <div class="step-header">
+            <h3>Create WebLock Password</h3>
+            <p class="step-sub">This master password unlocks your protected websites</p>
+          </div>
+          <form id="onboardingPasswordForm">
+            <div class="modal-body">
+              <div class="form-group">
+                <label class="form-label" for="onboardingPw1">Master Password</label>
+                <input
+                  type="password"
+                  id="onboardingPw1"
+                  class="form-input"
+                  placeholder="Enter at least 4 characters"
+                  required
+                  minlength="4"
+                  autofocus
+                />
+                <!-- Password Strength Meter -->
+                <div class="strength-meter-wrap" id="strengthMeterWrap" style="display: none;">
+                  <div class="strength-bar-bg">
+                    <div class="strength-bar-fill" id="strengthBarFill"></div>
+                  </div>
+                  <span class="strength-label" id="strengthLabel">Too short</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="onboardingPw2">Confirm Password</label>
+                <input
+                  type="password"
+                  id="onboardingPw2"
+                  class="form-input"
+                  placeholder="Re-enter master password"
+                  required
+                  minlength="4"
+                />
+              </div>
+              <div class="form-error" id="onboardingPwError" style="display: none;"></div>
+            </div>
+            <div class="modal-footer single-footer">
+              <button type="submit" class="btn btn-primary btn-block glow-btn">Continue to Security Recovery</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Step 3: Security Recovery Setup -->
+        <div class="onboarding-step" id="stepRecovery" style="display: none;">
+          <div class="step-header">
+            <h3>Secure Your Recovery</h3>
+            <p class="step-sub">Choose 3 questions. Any 1 correct answer can be used to reset your master password.</p>
+          </div>
+          <form id="onboardingRecoveryForm">
+            <div class="modal-body">
+              <!-- Q1 -->
+              <div class="form-group">
+                <label class="form-label" for="onboardQ1">Question 1</label>
+                <select id="onboardQ1" class="form-select" required></select>
+                <input type="text" id="onboardA1" class="form-input" placeholder="Your answer (min. 2 characters)" required minlength="2" autocomplete="off" />
+              </div>
+
+              <!-- Q2 -->
+              <div class="form-group">
+                <label class="form-label" for="onboardQ2">Question 2</label>
+                <select id="onboardQ2" class="form-select" required></select>
+                <input type="text" id="onboardA2" class="form-input" placeholder="Your answer (min. 2 characters)" required minlength="2" autocomplete="off" />
+              </div>
+
+              <!-- Q3 -->
+              <div class="form-group">
+                <label class="form-label" for="onboardQ3">Question 3</label>
+                <select id="onboardQ3" class="form-select" required></select>
+                <input type="text" id="onboardA3" class="form-input" placeholder="Your answer (min. 2 characters)" required minlength="2" autocomplete="off" />
+              </div>
+
+              <div class="form-error" id="onboardingRecoveryError" style="display: none;"></div>
+            </div>
+            <div class="modal-footer single-footer">
+              <button type="submit" class="btn btn-primary btn-block glow-btn">Save Recovery & Select Sites</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Step 4: Starter Sites -->
+        <div class="onboarding-step" id="step3" style="display: none;">
+          <div class="step-header">
+            <h3>Select Distraction Websites</h3>
+            <p class="step-sub">Choose popular sites to lock immediately or configure later</p>
+          </div>
+          <div class="modal-body">
+            <div class="starter-sites-grid" id="starterSitesGrid">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+          <div class="modal-footer single-footer">
+            <button class="btn btn-primary btn-block glow-btn" id="finishOnboardingBtn">Finish Setup</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Site Password Settings Modal (Change mode or password) -->
+    <div class="modal-backdrop" id="sitePasswordModal" style="display: none;">
+      <div class="modal-card">
+        <div class="card-specular"></div>
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <div class="modal-icon" id="sitePasswordModalIcon"></div>
+            <div>
+              <h3 id="sitePasswordModalTitle">Password Protection</h3>
+              <p class="modal-subtitle" id="sitePasswordModalSubtitle">Configure password mode</p>
+            </div>
+          </div>
+          <button class="close-btn" id="closeSitePasswordModalBtn" aria-label="Close modal">✕</button>
+        </div>
+
+        <form id="sitePasswordForm">
+          <div class="modal-body">
+            <div class="form-group">
+              <label class="form-label">Protection Mode</label>
+              <div class="mode-options-grid">
+                <label class="mode-option-card">
+                  <input type="radio" name="siteCardPasswordMode" value="universal">
+                  <div class="mode-option-content">
+                    <div class="mode-title-row">
+                      <span class="mode-icon">🔐</span>
+                      <strong>Use WebLock password</strong>
+                    </div>
+                    <p class="mode-desc">Same password used for other protected sites</p>
+                  </div>
+                </label>
+
+                <label class="mode-option-card">
+                  <input type="radio" name="siteCardPasswordMode" value="separate">
+                  <div class="mode-option-content">
+                    <div class="mode-title-row">
+                      <span class="mode-icon">🔑</span>
+                      <strong>Use a separate password</strong>
+                    </div>
+                    <p class="mode-desc">Only this website uses this password</p>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <div id="siteCardAuthGroup">
+              <div class="form-group">
+                <label class="form-label" for="siteCardCurrentAuth">Current Authorization Password</label>
+                <input
+                  type="password"
+                  id="siteCardCurrentAuth"
+                  class="form-input"
+                  placeholder="Enter current site or master password"
+                  required
+                />
+              </div>
+            </div>
+
+            <div id="siteCardNewPwGroup" style="display: none;">
+              <div class="form-group">
+                <label class="form-label" for="siteCardNewPw">New Separate Password</label>
+                <input
+                  type="password"
+                  id="siteCardNewPw"
+                  class="form-input"
+                  placeholder="Min. 4 characters"
+                  minlength="4"
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="siteCardConfirmPw">Confirm Password</label>
+                <input
+                  type="password"
+                  id="siteCardConfirmPw"
+                  class="form-input"
+                  placeholder="Re-enter password"
+                  minlength="4"
+                />
+              </div>
+            </div>
+
+            <div class="form-error" id="sitePasswordError" style="display: none;"></div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="cancelSitePasswordModalBtn">Cancel</button>
+            <button type="submit" class="btn btn-primary glow-btn" id="saveSitePasswordBtn">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Site Password Reset Modal (via Master Password authorization) -->
+    <div class="modal-backdrop" id="dashSiteResetModal" style="display: none;">
+      <div class="modal-card">
+        <div class="card-specular"></div>
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <div class="modal-icon" id="dashSiteResetModalIcon"></div>
+            <div>
+              <h3 id="dashSiteResetTitle">Reset Site Password</h3>
+              <p class="modal-subtitle">Authorize with your master WebLock password</p>
+            </div>
+          </div>
+          <button class="close-btn" id="closeDashSiteResetBtn" aria-label="Close modal">✕</button>
+        </div>
+
+        <form id="dashSiteResetForm">
+          <div class="modal-body">
+            <div class="form-group">
+              <label class="form-label" for="dashSiteResetMasterPw">Master WebLock Password</label>
+              <input
+                type="password"
+                id="dashSiteResetMasterPw"
+                class="form-input"
+                placeholder="Enter master password"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">New Protection Setting</label>
+              <div class="radio-stack">
+                <label class="radio-option">
+                  <input type="radio" name="dashResetChoice" value="universal" checked>
+                  <span><strong>Use WebLock password</strong> (revert to master password)</span>
+                </label>
+                <label class="radio-option">
+                  <input type="radio" name="dashResetChoice" value="separate">
+                  <span><strong>Set a new separate password</strong></span>
+                </label>
+              </div>
+            </div>
+
+            <div id="dashResetNewPwGroup" style="display: none;">
+              <div class="form-group">
+                <label class="form-label" for="dashResetNewPw">New Separate Password</label>
+                <input
+                  type="password"
+                  id="dashResetNewPw"
+                  class="form-input"
+                  placeholder="Min. 4 characters"
+                  minlength="4"
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="dashResetConfirmPw">Confirm New Separate Password</label>
+                <input
+                  type="password"
+                  id="dashResetConfirmPw"
+                  class="form-input"
+                  placeholder="Re-enter password"
+                  minlength="4"
+                />
+              </div>
+            </div>
+
+            <div class="form-error" id="dashSiteResetError" style="display: none;"></div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="cancelDashSiteResetBtn">Cancel</button>
+            <button type="submit" class="btn btn-primary glow-btn">Authorize & Update</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+      </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div class="dashboard-toast" id="dashToast" style="display: none;"></div>
+  </div>
+
+  <script type="module" src="dashboard.js"></script>
+</body>
+</html>

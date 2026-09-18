@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Site Lock Settings</title>
+  <style>
+    body {
+      width: 300px;
+      font-family: -apple-system, Segoe UI, Roboto, sans-serif;
+      background: #151515;
+      color: #eee;
+      padding: 16px;
+    }
+    h3 { margin: 0 0 8px; font-size: 15px; }
+    .section { margin-bottom: 18px; }
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #333;
+      background: #0d0d0d;
+      color: #fff;
+      margin-bottom: 6px;
+      font-size: 13px;
+    }
+    button {
+      width: 100%;
+      padding: 8px;
+      border-radius: 6px;
+      border: none;
+      background: #4a7dff;
+      color: #fff;
+      cursor: pointer;
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+    button:hover { background: #3a6ae8; }
+    ul { list-style: none; padding: 0; margin: 0; max-height: 120px; overflow-y: auto; }
+    li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #1f1f1f;
+      padding: 6px 8px;
+      border-radius: 6px;
+      margin-bottom: 4px;
+      font-size: 13px;
+      word-break: break-all;
+    }
+    li button {
+      width: auto;
+      background: #3a1c1c;
+      color: #ff8080;
+      padding: 2px 8px;
+      margin: 0;
+      font-size: 12px;
+    }
+    .status { font-size: 12px; color: #7fd97f; height: 14px; margin-top: 4px; }
+    .hint { font-size: 11px; color: #888; margin-top: -4px; margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <div class="section">
+    <h3>🔑 Password</h3>
+    <input type="password" id="pw1" placeholder="New password" />
+    <input type="password" id="pw2" placeholder="Confirm password" />
+    <button id="savePw">Save Password</button>
+    <div class="status" id="pwStatus"></div>
+  </div>
+
+  <div class="section">
+    <h3>🔒 Locked Sites</h3>
+    <div class="hint">Type just the domain, e.g. youtube.com</div>
+    <input type="text" id="siteInput" placeholder="example.com" />
+    <button id="addSite">Add Site</button>
+    <ul id="siteList"></ul>
+  </div>
+
+  <script src="hash.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

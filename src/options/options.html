@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings — WebLock</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div class="settings-layout">
+    <!-- Navbar -->
+    <header class="navbar">
+      <div class="nav-container">
+        <div class="nav-brand">
+          <div class="brand-badge" id="optBrandIcon"></div>
+          <div class="brand-text">
+            <span class="brand-title">WebLock Settings</span>
+            <span class="brand-tagline">Security, protection rules, and backup management</span>
+          </div>
+        </div>
+        <button class="btn btn-secondary" id="backToDashBtn">
+          <span>Go to Dashboard</span>
+          <span id="dashArrowIcon"></span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="content-container">
+
+        <!-- Security Card -->
+        <div class="settings-card">
+          <div class="card-specular"></div>
+          <div class="card-header">
+            <div class="header-icon" id="securityHeaderIcon"></div>
+            <div>
+              <h2 class="card-title">Security & Master Password</h2>
+              <p class="card-desc">PBKDF2-HMAC-SHA256 encrypted credential with 310,000 iterations</p>
+            </div>
+          </div>
+          <div class="card-body">
+            <form id="changePasswordForm">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label" for="currentPassword">Current Password</label>
+                  <input type="password" id="currentPassword" class="form-input" placeholder="Current password" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="newPassword">New Password</label>
+                  <input type="password" id="newPassword" class="form-input" placeholder="Min. 4 characters" minlength="4" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="confirmNewPassword">Confirm New Password</label>
+                  <input type="password" id="confirmNewPassword" class="form-input" placeholder="Re-enter new" minlength="4" required>
+                </div>
+              </div>
+              <div class="status-message" id="changePasswordStatus" style="display: none;"></div>
+              <div class="form-action">
+                <button type="submit" class="btn btn-primary btn-sm glow-btn">Update Password</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Account Recovery Card -->
+        <div class="settings-card">
+          <div class="card-specular"></div>
+          <div class="card-header">
+            <div class="header-icon" id="recoveryHeaderIcon"></div>
+            <div>
+              <h2 class="card-title">Account Recovery & Reset</h2>
+              <p class="card-desc">Answer 1 of 3 security questions to reset your master password if forgotten</p>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="setting-item">
+              <div class="setting-info">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                  <strong>Recovery Status</strong>
+                  <span class="status-badge-pill" id="recoveryStatusBadge">● Checking...</span>
+                </div>
+                <p id="recoveryStatusDesc">Answer any 1 of 3 questions to reset your master password. No data is ever sent externally.</p>
+              </div>
+              <button class="btn btn-secondary btn-sm" id="manageRecoveryBtn">
+                <span id="manageRecoveryIcon"></span>
+                <span id="manageRecoveryBtnText">Configure Questions</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Site Passwords Overview Card -->
+        <div class="settings-card">
+          <div class="card-specular"></div>
+          <div class="card-header">
+            <div class="header-icon" id="sitePassHeaderIcon"></div>
+            <div>
+              <h2 class="card-title">Password Modes Overview</h2>
+              <p class="card-desc">WebLock never stores or displays raw password values</p>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="site-pass-overview-grid">
+              <div class="site-pass-stat-card">
+                <span class="site-pass-stat-icon">🔐</span>
+                <div class="site-pass-stat-info">
+                  <span class="site-pass-stat-count" id="universalCountText">0</span>
+                  <span class="site-pass-stat-label">WebLock Password</span>
+                  <span class="site-pass-stat-sub">Same password used across protected sites</span>
+                </div>
+              </div>
+              <div class="site-pass-stat-card">
+                <span class="site-pass-stat-icon">🔑</span>
+                <div class="site-pass-stat-info">
+                  <span class="site-pass-stat-count" id="separateCountText">0</span>
+                  <span class="site-pass-stat-label">Separate Passwords</span>
+                  <span class="site-pass-stat-sub">Individual site-specific passwords</span>
+                </div>
+              </div>
+            </div>
+            <p class="site-pass-note">
+              🔒 <strong>Security Policy:</strong> WebLock stores salted PBKDF2 hashes only. You can switch modes or reset a site-specific password using your master password in the Dashboard or directly on the Lock Screen.
+            </p>
+          </div>
+        </div>
+
+        <!-- Protection & Lifetime -->
+        <div class="settings-card">
+          <div class="card-specular"></div>
+          <div class="card-header">
+            <div class="header-icon" id="protectionHeaderIcon"></div>
+            <div>
+              <h2 class="card-title">Protection & Session Lifetime</h2>
+              <p class="card-desc">Control how and when tabs require unlock credentials</p>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="setting-item">
+              <div class="setting-info">
+                <strong>Master Protection</strong>
+                <p>Enforce DeclarativeNetRequest network redirects for all locked websites</p>
+              </div>
+              <label class="modern-switch">
+                <input type="checkbox" id="settingGlobalToggle" checked>
+                <span class="switch-slider"></span>
+              </label>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <strong>Incognito Mode Protection</strong>
+                <p id="incognitoSettingDesc">WebLock protects normal and private windows</p>
+              </div>
+              <button class="btn btn-outline btn-sm" id="optIncognitoBtn">Configure in Chrome</button>
+            </div>
+
+            <div class="setting-item column-item">
+              <div class="setting-info">
+                <strong>Authentication Lifetime</strong>
+                <p>Choose when an unlocked site prompts for master credentials again</p>
+              </div>
+              <div class="radio-options">
+                <label class="radio-card">
+                  <input type="radio" name="authMode" value="per-tab" checked>
+                  <div class="radio-content">
+                    <strong>Once per tab (Recommended)</strong>
+                    <span>Remains unlocked in the current tab; refresh and links work seamlessly without reprompting.</span>
+                  </div>
+                </label>
+                <label class="radio-card">
+                  <input type="radio" name="authMode" value="every-navigation">
+                  <div class="radio-content">
+                    <strong>Every new navigation</strong>
+                    <span>Prompts for password whenever the domain is reloaded or navigated to.</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Session Management -->
+        <div class="settings-card">
+          <div class="card-specular"></div>
+          <div class="card-header">
+            <div class="header-icon" id="sessionHeaderIcon"></div>
+            <div>
+              <h2 class="card-title">Session Management</h2>
+              <p class="card-desc">Manage active temporary tab unlock bypasses</p>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="setting-item">
+              <div class="setting-info">
+                <strong>Relock All Tabs Immediately</strong>
+                <p>Clears all DNR session rules. Any currently open unlocked tabs will lock immediately on next navigation.</p>
+              </div>
+              <button class="btn btn-secondary btn-sm" id="clearSessionsBtn">
+                <span id="clearSessionIcon"></span>
+                <span>Relock All Tabs</span>
+              </button>
+            </div>
+            <div class="status-message" id="clearSessionStatus" style="display: none;"></div>
+          </div>
+        </div>
+
+        <!-- Backup & Data -->
+        <div class="settings-card">
+          <div class="card-specular"></div>
+          <div class="card-header">
+            <div class="header-icon" id="dataHeaderIcon"></div>
+            <div>
+              <h2 class="card-title">Backup & Data Management</h2>
+              <p class="card-desc">Export or restore your personal locked websites and preferences</p>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="setting-item">
+              <div class="setting-info">
+                <strong>Export Configuration</strong>
+                <p>Save locked sites and preferences to a local JSON backup file</p>
+              </div>
+              <button class="btn btn-secondary btn-sm" id="exportBtn">Export JSON</button>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <strong>Import Configuration</strong>
+                <p>Restore locked sites from a previously exported backup file</p>
+              </div>
+              <div>
+                <input type="file" id="importFileInput" accept=".json" style="display: none;">
+                <button class="btn btn-secondary btn-sm" id="importBtn">Import JSON</button>
+              </div>
+            </div>
+
+            <div class="setting-item danger-item">
+              <div class="setting-info">
+                <strong class="text-danger">Reset All Data</strong>
+                <p>Permanently erase all locked websites, preferences, and master credentials</p>
+              </div>
+              <button class="btn btn-danger btn-sm" id="resetDataBtn">Reset Everything</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- Manage Recovery Modal -->
+    <div class="modal-backdrop" id="recoveryModal" style="display: none;">
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <h3 class="modal-title">Manage Recovery Questions</h3>
+            <p class="modal-subtitle">Configure 3 questions. Answering any one question will recover your master password.</p>
+          </div>
+          <button class="icon-btn close-modal-btn" id="closeRecoveryModalBtn" type="button">&times;</button>
+        </div>
+        <div class="modal-body">
+          <!-- Auth step -->
+          <div id="recoveryAuthStep">
+            <p class="modal-step-text">Confirm your master password to manage security recovery questions:</p>
+            <div class="form-group" style="margin-top: 12px;">
+              <label class="form-label" for="recoveryAuthPassword">Master Password</label>
+              <input type="password" id="recoveryAuthPassword" class="form-input" placeholder="Enter current master password" />
+            </div>
+            <div class="status-message error" id="recoveryAuthError" style="display: none;"></div>
+            <div class="form-action" style="margin-top: 16px; display: flex; gap: 8px; justify-content: flex-end;">
+              <button class="btn btn-secondary btn-sm" id="cancelRecoveryAuthBtn" type="button">Cancel</button>
+              <button class="btn btn-primary btn-sm" id="verifyRecoveryAuthBtn" type="button">Authorize</button>
+            </div>
+          </div>
+
+          <!-- Edit step -->
+          <form id="recoveryEditForm" style="display: none;">
+            <div class="form-group">
+              <label class="form-label" for="optQ1">Question 1</label>
+              <select id="optQ1" class="form-select"></select>
+              <input type="text" id="optA1" class="form-input" placeholder="Your answer (case-insensitive)" minlength="2" required style="margin-top: 6px;" />
+            </div>
+            <div class="form-group" style="margin-top: 14px;">
+              <label class="form-label" for="optQ2">Question 2</label>
+              <select id="optQ2" class="form-select"></select>
+              <input type="text" id="optA2" class="form-input" placeholder="Your answer (case-insensitive)" minlength="2" required style="margin-top: 6px;" />
+            </div>
+            <div class="form-group" style="margin-top: 14px;">
+              <label class="form-label" for="optQ3">Question 3</label>
+              <select id="optQ3" class="form-select"></select>
+              <input type="text" id="optA3" class="form-input" placeholder="Your answer (case-insensitive)" minlength="2" required style="margin-top: 6px;" />
+            </div>
+            <div class="status-message error" id="recoveryEditError" style="display: none;"></div>
+            <div class="form-action" style="margin-top: 20px; display: flex; gap: 8px; justify-content: flex-end;">
+              <button class="btn btn-secondary btn-sm" id="cancelRecoveryEditBtn" type="button">Cancel</button>
+              <button class="btn btn-primary btn-sm" type="submit">Save Recovery Questions</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notice -->
+    <div class="options-toast" id="optionsToast" style="display: none;"></div>
+  </div>
+
+  <script type="module" src="options.js"></script>
+</body>
+</html>

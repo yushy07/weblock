@@ -1,0 +1,28 @@
+{
+  "name": "weblock",
+  "version": "1.0.0",
+  "description": "AppLock for Chrome websites using Manifest V3 and declarativeNetRequest",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "generate-icons": "powershell -ExecutionPolicy Bypass -File scripts/resize-icons.ps1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yushy07/weblock.git"
+  },
+  "keywords": [
+    "chrome-extension",
+    "manifest-v3",
+    "site-blocker",
+    "applock",
+    "declarative-net-request",
+    "local-first",
+    "privacy"
+  ],
+  "author": "Ayush Kant",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "vitest": "^3.0.8"
+  }
+}

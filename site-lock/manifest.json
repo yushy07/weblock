@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Site Lock",
+  "version": "1.0",
+  "description": "Password-lock specific websites, every time they open in a new tab.",
+  "permissions": ["storage", "tabs", "webNavigation"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Site Lock settings"
+  }
+}
