@@ -1,14 +1,14 @@
 :root {
-  --bg: #08090D;
-  --surface: #0E1118;
-  --surface-elevated: #151A24;
-  --surface-hover: #1C2331;
+  --bg: #06070B;
+  --surface: rgba(14, 18, 28, 0.72);
+  --surface-elevated: rgba(22, 28, 44, 0.8);
+  --surface-hover: rgba(30, 38, 58, 0.85);
   --border: rgba(255, 255, 255, 0.08);
   --border-focus: #8B5CF6;
   --accent: #8B5CF6;
   --accent-hover: #9D75F7;
-  --accent-gradient: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%);
-  --accent-glow: rgba(139, 92, 246, 0.3);
+  --accent-gradient: linear-gradient(135deg, #8B5CF6 0%, #6366F1 50%, #4F46E5 100%);
+  --accent-glow: rgba(139, 92, 246, 0.35);
   --text-primary: #F8FAFC;
   --text-secondary: #94A3B8;
   --text-muted: #64748B;
@@ -16,7 +16,8 @@
   --success-bg: rgba(16, 185, 129, 0.12);
   --danger: #F43F5E;
   --danger-bg: rgba(244, 63, 94, 0.12);
-  --font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 * {
@@ -31,10 +32,82 @@ body {
   font-family: var(--font-family);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
-  background-image: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(139, 92, 246, 0.12), transparent 70%);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Ambient Background & Animated 3D Orbs */
+.mesh-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.glow-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.45;
+  animation: floatOrb 14s ease-in-out infinite alternate;
+}
+
+.orb-primary {
+  width: 600px;
+  height: 600px;
+  top: -100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.28) 0%, rgba(99, 102, 241, 0.12) 50%, transparent 70%);
+}
+
+.orb-secondary {
+  width: 480px;
+  height: 480px;
+  bottom: 5%;
+  right: 10%;
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.18) 0%, transparent 70%);
+  animation-duration: 18s;
+}
+
+.orb-tertiary {
+  width: 420px;
+  height: 420px;
+  top: 40%;
+  left: -5%;
+  background: radial-gradient(circle, rgba(236, 72, 153, 0.14) 0%, transparent 70%);
+  animation: floatOrbTertiary 20s ease-in-out infinite alternate;
+}
+
+@keyframes floatOrb {
+  0% { transform: translate(-50%, 0) scale(1); }
+  50% { transform: translate(-45%, 35px) scale(1.06); }
+  100% { transform: translate(-55%, -25px) scale(0.95); }
+}
+
+@keyframes floatOrbTertiary {
+  0% { transform: translate(0, 0) scale(0.95); }
+  50% { transform: translate(40px, -30px) scale(1.08); }
+  100% { transform: translate(-30px, 30px) scale(0.92); }
+}
+
+.grid-overlay {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 20%, transparent 80%);
 }
 
 .settings-layout {
+  position: relative;
+  z-index: 1;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -42,13 +115,14 @@ body {
 
 /* Navbar */
 .navbar {
-  border-bottom: 1px solid var(--border);
-  background: rgba(14, 17, 24, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(12, 16, 26, 0.75);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
   position: sticky;
   top: 0;
   z-index: 50;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5);
 }
 
 .nav-container {
@@ -106,11 +180,33 @@ body {
 /* Settings Card */
 .settings-card {
   position: relative;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 18px;
+  background: rgba(14, 18, 30, 0.68);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  box-shadow: 
+    0 16px 36px -8px rgba(0, 0, 0, 0.65),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+    0 1px 0 0 rgba(255, 255, 255, 0.15) inset;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.settings-card:hover {
+  border-color: rgba(139, 92, 246, 0.35);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 22px 45px -10px rgba(0, 0, 0, 0.75),
+    0 0 30px -5px rgba(139, 92, 246, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.12) inset;
+}
+
+.card-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .card-specular {
@@ -596,5 +692,14 @@ input:checked + .switch-slider:before {
 
 .form-select:focus {
   border-color: var(--border-focus);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glow-orb {
+    animation: none !important;
+  }
+  .settings-card {
+    transition: none !important;
+  }
 }
 
