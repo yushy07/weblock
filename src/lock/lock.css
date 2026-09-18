@@ -1,15 +1,18 @@
 :root {
-  --bg: #07080C;
-  --surface: #0E1118;
-  --surface-glass: rgba(14, 17, 24, 0.85);
-  --surface-elevated: #151A24;
-  --surface-hover: #1C2331;
+  --bg: #06070B;
+  --surface: rgba(14, 18, 28, 0.75);
+  --surface-glass: rgba(14, 18, 30, 0.72);
+  --surface-elevated: rgba(22, 28, 44, 0.85);
+  --surface-hover: rgba(30, 38, 58, 0.85);
   --border: rgba(255, 255, 255, 0.08);
+  --border-highlight: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(139, 92, 246, 0.4) 50%, rgba(255, 255, 255, 0.05) 100%);
   --border-focus: #8B5CF6;
   --accent: #8B5CF6;
   --accent-light: #A78BFA;
-  --accent-gradient: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%);
-  --accent-glow: rgba(139, 92, 246, 0.35);
+  --accent-cyan: #06B6D4;
+  --accent-gradient: linear-gradient(135deg, #8B5CF6 0%, #6366F1 50%, #4F46E5 100%);
+  --accent-glow: rgba(139, 92, 246, 0.45);
+  --cyan-glow: rgba(6, 182, 212, 0.35);
   --text-primary: #F8FAFC;
   --text-secondary: #94A3B8;
   --text-muted: #64748B;
@@ -19,7 +22,8 @@
   --success: #10B981;
   --success-bg: rgba(16, 185, 129, 0.12);
   --warning: #F59E0B;
-  --font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-display: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 * {
@@ -75,8 +79,23 @@ body {
   height: 400px;
   bottom: -50px;
   right: 20%;
-  background: radial-gradient(circle, rgba(6, 182, 212, 0.2) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.25) 0%, transparent 70%);
   animation-duration: 16s;
+}
+
+.orb-tertiary {
+  width: 380px;
+  height: 380px;
+  top: 40%;
+  left: 10%;
+  background: radial-gradient(circle, rgba(236, 72, 153, 0.18) 0%, transparent 70%);
+  animation: floatOrbTertiary 18s ease-in-out infinite alternate;
+}
+
+@keyframes floatOrbTertiary {
+  0% { transform: translate(0, 0) scale(0.9); }
+  50% { transform: translate(30px, -40px) scale(1.1); }
+  100% { transform: translate(-20px, 20px) scale(1); }
 }
 
 @keyframes floatOrb {
@@ -102,32 +121,36 @@ body {
   width: 100%;
   max-width: 440px;
   padding: 24px;
+  perspective: 1200px;
 }
 
 .lock-card {
   position: relative;
   background: var(--surface-glass);
-  backdrop-filter: blur(28px);
-  -webkit-backdrop-filter: blur(28px);
-  border: 1px solid var(--border);
-  border-radius: 24px;
-  padding: 40px 36px 32px;
+  backdrop-filter: blur(32px) saturate(200%);
+  -webkit-backdrop-filter: blur(32px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 28px;
+  padding: 42px 36px 32px;
   box-shadow: 
-    0 24px 60px -12px rgba(0, 0, 0, 0.7),
-    0 0 0 1px rgba(255, 255, 255, 0.05),
-    0 0 40px -10px var(--accent-glow);
+    0 24px 64px -12px rgba(0, 0, 0, 0.85),
+    0 12px 28px -6px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+    0 1px 0 0 rgba(255, 255, 255, 0.2) inset,
+    0 0 45px -10px var(--accent-glow);
   text-align: center;
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+  transform-style: preserve-3d;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
   overflow: hidden;
 }
 
 .card-glass-specular {
   position: absolute;
   top: 0;
-  left: 15%;
-  right: 15%;
+  left: 10%;
+  right: 10%;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), rgba(139, 92, 246, 0.4), transparent);
 }
 
 .lock-card.shake {
@@ -154,17 +177,17 @@ body {
 
 .avatar-ring {
   position: absolute;
-  inset: -6px;
-  border-radius: 26px;
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.4), rgba(99, 102, 241, 0.1));
-  opacity: 0.6;
-  filter: blur(6px);
-  animation: pulseGlow 3s ease-in-out infinite;
+  inset: -8px;
+  border-radius: 30px;
+  background: conic-gradient(from 0deg, #8B5CF6, #06B6D4, #6366F1, #EC4899, #8B5CF6);
+  opacity: 0.65;
+  filter: blur(8px);
+  animation: rotateAura 8s linear infinite;
 }
 
-@keyframes pulseGlow {
-  0%, 100% { opacity: 0.5; transform: scale(0.98); }
-  50% { opacity: 0.85; transform: scale(1.04); }
+@keyframes rotateAura {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .site-avatar {
@@ -230,9 +253,10 @@ body {
 }
 
 .lock-title {
-  font-size: 26px;
+  font-family: var(--font-display);
+  font-size: 28px;
   font-weight: 800;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.025em;
   color: var(--text-primary);
   margin-bottom: 6px;
 }
@@ -403,34 +427,59 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Unlock Button */
 .unlock-button {
   background: var(--accent-gradient);
   color: #FFFFFF;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 14px;
   padding: 14px 20px;
+  font-family: var(--font-display);
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.01em;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.35);
+  box-shadow: 0 8px 24px -4px rgba(139, 92, 246, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.25);
   position: relative;
   overflow: hidden;
 }
 
+.unlock-button::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -100%;
+  width: 50%;
+  height: 200%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.22) 50%,
+    transparent 100%
+  );
+  transform: rotate(30deg);
+  animation: shimmerBeam 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes shimmerBeam {
+  0%, 70% { left: -100%; }
+  100% { left: 200%; }
+}
+
 .unlock-button:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 25px rgba(139, 92, 246, 0.5);
-  filter: brightness(1.06);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px -4px rgba(139, 92, 246, 0.65), inset 0 1px 0 0 rgba(255, 255, 255, 0.35);
+  filter: brightness(1.08);
 }
 
 .unlock-button:active:not(:disabled) {
-  transform: translateY(0);
+  transform: translateY(2px) scale(0.985);
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4), inset 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .unlock-button:disabled {
@@ -748,4 +797,17 @@ body {
 .btn-primary:hover {
   opacity: 0.92;
   box-shadow: 0 0 16px var(--accent-glow);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glow-orb,
+  .avatar-ring,
+  .unlock-button::after,
+  .pulse-dot {
+    animation: none !important;
+  }
+  .lock-card,
+  .unlock-button {
+    transition: none !important;
+  }
 }

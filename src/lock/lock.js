@@ -581,13 +581,36 @@ window.addEventListener('focus', () => {
   const isModalOpen =
     (recoveryModal && recoveryModal.style.display !== 'none') ||
     (siteResetModal && siteResetModal.style.display !== 'none');
-  if (!isModalOpen) {
-    passwordInput.focus();
-  }
-});
+// 3D Card Interactive Tilt Physics
+function init3DCardTilt() {
+  const card = document.getElementById('lockCard');
+  if (!card) return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  const wrapper = card.parentElement;
+  if (!wrapper) return;
+
+  wrapper.addEventListener('mousemove', (e) => {
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+
+    const rotateX = ((y - centerY) / centerY) * -6;
+    const rotateY = ((x - centerX) / centerX) * 6;
+
+    card.style.transform = `perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) translateY(-2px)`;
+  });
+
+  wrapper.addEventListener('mouseleave', () => {
+    card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0px)';
+  });
+}
 
 // Initialize
 initVisuals();
+init3DCardTilt();
 checkActiveCooldown();
 resolveCurrentTabId();
 loadSiteDetails();
