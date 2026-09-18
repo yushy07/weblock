@@ -235,7 +235,11 @@ async function loadSiteDetails() {
 function applySiteDetails(site) {
   const siteDisplayName = site.name || domain;
   lockTitle.textContent = `${siteDisplayName} is locked`;
-  lockSubtitle.innerHTML = `This website is protected by <strong class="brand-highlight">WebLock</strong>`;
+  if (site.protectionMode === 'random') {
+    lockSubtitle.innerHTML = `WebLock needs your password to continue.`;
+  } else {
+    lockSubtitle.innerHTML = `This website is protected by <strong class="brand-highlight">WebLock</strong>`;
+  }
 
   // Password mode
   if (site.passwordMode === PASSWORD_MODES.SEPARATE) {
